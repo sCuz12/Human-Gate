@@ -1,0 +1,6 @@
+version: "3.9"
+
+services:
+  placeholder:
+    image: alpine:3.20
+    command: ["sh", "-c", "echo 'Use Supabase CLI for local services' && tail -f /dev/null"]

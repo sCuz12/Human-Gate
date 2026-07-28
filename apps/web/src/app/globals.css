@@ -1,0 +1,27 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --font-sans: "Instrument Sans";
+}
+
+html {
+  background:
+    radial-gradient(circle at top left, rgba(183, 75, 42, 0.15), transparent 35%),
+    linear-gradient(180deg, #f9f4ea 0%, #f2eee4 100%);
+  color: #13110d;
+}
+
+body {
+  min-height: 100vh;
+  margin: 0;
+}
+
+a {
+  color: inherit;
+}
+
+* {
+  box-sizing: border-box;
+}
