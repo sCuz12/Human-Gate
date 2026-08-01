@@ -152,14 +152,15 @@ func (s *Service) SubmitApprovalRequest(ctx context.Context, cmd SubmitApprovalR
 		return SubmitResult{}, fmt.Errorf("create approval request: %w", err)
 	}
 
-	if _, err := queries.CreateContinuationTarget(ctx, generated.CreateContinuationTargetParams{
+	continuationTarget, err := queries.CreateContinuationTarget(ctx, generated.CreateContinuationTargetParams{
 		WorkspaceID:            workspaceID,
 		ApprovalRequestID:      request.ID,
 		Strategy:               generated.ContinuationStrategy(cmd.Continuation.Strategy),
 		Platform:               cmd.Source.Platform,
 		Destination:            pgxutil.Text(cmd.Continuation.URL),
 		EncryptedConfiguration: `{}`,
-	}); err != nil {
+	})
+	if err != nil {
 		return SubmitResult{}, fmt.Errorf("create continuation target: %w", err)
 	}
 
@@ -187,6 +188,80 @@ func (s *Service) SubmitApprovalRequest(ctx context.Context, cmd SubmitApprovalR
 		Metadata:          string(auditMetadata),
 	}); err != nil {
 		return SubmitResult{}, fmt.Errorf("create audit event: %w", err)
+	}
+
+	if request.Status == generated.ApprovalStatusAllowed {
+		createdDecision, err := queries.CreateApprovalDecision(ctx, generated.CreateApprovalDecisionParams{
+			WorkspaceID:        workspaceID,
+			ApprovalRequestID:  request.ID,
+			Decision:           generated.DecisionTypeAllowed,
+			OriginalActionHash: request.OriginalActionHash,
+			ApprovedAction:     string(request.OriginalAction),
+			ApprovedActionHash: pgxutil.Text(request.OriginalActionHash),
+			ChangedFields:      `[]`,
+			Comment:            pgxutil.Text("Allowed automatically by policy."),
+			DecidedBy:          pgtype.UUID{},
+			IssuedAt:           pgxutil.Timestamptz(now),
+			ExpiresAt:          pgtype.Timestamptz{},
+		})
+		if err != nil {
+			return SubmitResult{}, fmt.Errorf("create automatic allowed decision: %w", err)
+		}
+
+		createdDelivery, err := queries.CreateDecisionDelivery(ctx, generated.CreateDecisionDeliveryParams{
+			WorkspaceID:          workspaceID,
+			DecisionID:           createdDecision.ID,
+			ContinuationTargetID: continuationTarget.ID,
+			Status:               generated.DeliveryStatusPending,
+			NextAttemptAt:        pgxutil.Timestamptz(now),
+		})
+		if err != nil {
+			return SubmitResult{}, fmt.Errorf("create automatic allowed delivery: %w", err)
+		}
+
+		allowedAuditMetadata, err := marshalJSONObject(map[string]any{
+			"decision":  generated.DecisionTypeAllowed,
+			"automatic": true,
+		})
+		if err != nil {
+			return SubmitResult{}, fmt.Errorf("marshal automatic allowed audit metadata: %w", err)
+		}
+
+		if _, err := queries.CreateAuditEvent(ctx, generated.CreateAuditEventParams{
+			WorkspaceID:       workspaceID,
+			ApprovalRequestID: request.ID,
+			DecisionID:        createdDecision.ID,
+			ActorType:         "system",
+			ActorID:           pgtype.UUID{},
+			EventType:         "approval_request.allowed",
+			Metadata:          string(allowedAuditMetadata),
+		}); err != nil {
+			return SubmitResult{}, fmt.Errorf("create automatic allowed audit event: %w", err)
+		}
+
+		deliveryAuditMetadata, err := marshalJSONObject(map[string]any{
+			"delivery_id":              pgxutil.UUIDString(createdDelivery.ID),
+			"continuation_target_id":   pgxutil.UUIDString(continuationTarget.ID),
+			"delivery_status":          createdDelivery.Status,
+			"continuation_strategy":    continuationTarget.Strategy,
+			"continuation_platform":    continuationTarget.Platform,
+			"delivery_next_attempt_at": now,
+		})
+		if err != nil {
+			return SubmitResult{}, fmt.Errorf("marshal automatic allowed delivery audit metadata: %w", err)
+		}
+
+		if _, err := queries.CreateAuditEvent(ctx, generated.CreateAuditEventParams{
+			WorkspaceID:       workspaceID,
+			ApprovalRequestID: request.ID,
+			DecisionID:        createdDecision.ID,
+			ActorType:         "system",
+			ActorID:           pgtype.UUID{},
+			EventType:         "decision.delivery_scheduled",
+			Metadata:          string(deliveryAuditMetadata),
+		}); err != nil {
+			return SubmitResult{}, fmt.Errorf("create automatic allowed delivery audit event: %w", err)
+		}
 	}
 
 	if err := tx.Commit(ctx); err != nil {
@@ -326,7 +401,6 @@ func matchesPolicy(policy generated.ListActivePolicyVersionsForWorkspaceRow, cmd
 			return false, pgtype.UUID{}, pgtype.UUID{}, pgtype.Timestamptz{}, fmt.Errorf("unmarshal policy conditions: %w", err)
 		}
 	}
-	fmt.Println(conditions)
 	for _, condition := range conditions {
 		if !evaluateCondition(condition, cmd) {
 			return false, pgtype.UUID{}, pgtype.UUID{}, pgtype.Timestamptz{}, nil
