@@ -294,6 +294,67 @@ func (q *Queries) ListApprovalRequestsByWorkspace(ctx context.Context, arg ListA
 	return items, nil
 }
 
+const listDueExpiredApprovalRequests = `-- name: ListDueExpiredApprovalRequests :many
+select id, workspace_id, idempotency_key, action_type, title, description, original_action, original_action_hash, source_platform, source_workflow_id, source_execution_id, context, affected_systems, metadata, matched_policy_id, matched_policy_version_id, matched_policy_snapshot, assigned_user_id, assigned_group_id, status, decision_required, expires_at, resolved_at, created_at, updated_at
+from public.approval_requests
+where status = 'pending'
+  and expires_at is not null
+  and expires_at <= $1
+order by expires_at, created_at
+limit $2
+`
+
+type ListDueExpiredApprovalRequestsParams struct {
+	NowAt      pgtype.Timestamptz
+	LimitCount int32
+}
+
+func (q *Queries) ListDueExpiredApprovalRequests(ctx context.Context, arg ListDueExpiredApprovalRequestsParams) ([]ApprovalRequest, error) {
+	rows, err := q.db.Query(ctx, listDueExpiredApprovalRequests, arg.NowAt, arg.LimitCount)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []ApprovalRequest
+	for rows.Next() {
+		var i ApprovalRequest
+		if err := rows.Scan(
+			&i.ID,
+			&i.WorkspaceID,
+			&i.IdempotencyKey,
+			&i.ActionType,
+			&i.Title,
+			&i.Description,
+			&i.OriginalAction,
+			&i.OriginalActionHash,
+			&i.SourcePlatform,
+			&i.SourceWorkflowID,
+			&i.SourceExecutionID,
+			&i.Context,
+			&i.AffectedSystems,
+			&i.Metadata,
+			&i.MatchedPolicyID,
+			&i.MatchedPolicyVersionID,
+			&i.MatchedPolicySnapshot,
+			&i.AssignedUserID,
+			&i.AssignedGroupID,
+			&i.Status,
+			&i.DecisionRequired,
+			&i.ExpiresAt,
+			&i.ResolvedAt,
+			&i.CreatedAt,
+			&i.UpdatedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const listPendingApprovalRequestsByAssignee = `-- name: ListPendingApprovalRequestsByAssignee :many
 select id, workspace_id, idempotency_key, action_type, title, description, original_action, original_action_hash, source_platform, source_workflow_id, source_execution_id, context, affected_systems, metadata, matched_policy_id, matched_policy_version_id, matched_policy_snapshot, assigned_user_id, assigned_group_id, status, decision_required, expires_at, resolved_at, created_at, updated_at
 from public.approval_requests

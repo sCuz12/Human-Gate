@@ -76,7 +76,6 @@ func (s *Service) ProcessDue(ctx context.Context) error {
 	}
 
 	for _, delivery := range deliveries {
-		fmt.Println(delivery.Destination)
 		if err := s.processOne(ctx, queries, delivery); err != nil {
 			s.logger.ErrorContext(
 				ctx,

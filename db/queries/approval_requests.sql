@@ -78,6 +78,15 @@ order by created_at desc
 limit $3
 offset $4;
 
+-- name: ListDueExpiredApprovalRequests :many
+select *
+from public.approval_requests
+where status = 'pending'
+  and expires_at is not null
+  and expires_at <= sqlc.arg(now_at)
+order by expires_at, created_at
+limit sqlc.arg(limit_count);
+
 -- name: LockApprovalRequestForDecision :one
 select *
 from public.approval_requests

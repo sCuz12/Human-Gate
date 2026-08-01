@@ -8,6 +8,7 @@ import (
 	"syscall"
 	"time"
 
+	"humangate/internal/approval"
 	"humangate/internal/delivery"
 	"humangate/internal/platform/config"
 	"humangate/internal/platform/database"
@@ -35,15 +36,14 @@ func main() {
 	deliveryService := delivery.NewService(dbPool, nil, logger, delivery.Config{
 		SigningKey: cfg.DecisionSigningKey,
 	})
+	approvalService := approval.NewService(dbPool, nil, logger)
 
 	logger.Info("worker started", "queues", cfg.WorkerQueues)
 
 	ticker := time.NewTicker(5 * time.Second)
 	defer ticker.Stop()
 
-	if err := deliveryService.ProcessDue(ctx); err != nil {
-		logger.ErrorContext(ctx, "process due deliveries", "error", err)
-	}
+	processDue(ctx, logger, approvalService, deliveryService)
 
 	for {
 		select {
@@ -51,9 +51,17 @@ func main() {
 			logger.Info("worker stopped")
 			return
 		case <-ticker.C:
-			if err := deliveryService.ProcessDue(ctx); err != nil {
-				logger.ErrorContext(ctx, "process due deliveries", "error", err)
-			}
+			processDue(ctx, logger, approvalService, deliveryService)
 		}
+	}
+}
+
+func processDue(ctx context.Context, logger *slog.Logger, approvalService *approval.Service, deliveryService *delivery.Service) {
+	if _, err := approvalService.ExpireDueApprovalRequests(ctx, 0); err != nil {
+		logger.ErrorContext(ctx, "process due approval expiries", "error", err)
+	}
+
+	if err := deliveryService.ProcessDue(ctx); err != nil {
+		logger.ErrorContext(ctx, "process due deliveries", "error", err)
 	}
 }

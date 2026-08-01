@@ -181,7 +181,7 @@ export function InboxClient() {
                   Status
                 </p>
                 <div className="mt-3 grid gap-2">
-                  {["all", "pending", "approved", "rejected", "blocked", "allowed"].map((status) => (
+                  {["all", "pending", "approved", "rejected", "expired", "blocked", "allowed"].map((status) => (
                     <button
                       className={`rounded-md px-3 py-2 text-left text-sm transition ${
                         statusFilter === status
