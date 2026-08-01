@@ -7,8 +7,10 @@ import type { Session } from "@supabase/supabase-js";
 
 import {
   decideApprovalRequest,
+  getApprovalRequestAuditEvents,
   getApprovalRequestDelivery,
   getApprovalRequest,
+  type ApprovalRequestAuditEvent,
   type ApprovalRequest,
   type DecisionDelivery,
 } from "@/lib/api/approval-requests";
@@ -42,6 +44,7 @@ export function RequestDetailClient() {
   const [session, setSession] = useState<Session | null>(null);
   const [request, setRequest] = useState<ApprovalRequest | null>(null);
   const [delivery, setDelivery] = useState<DecisionDelivery | null>(null);
+  const [auditEvents, setAuditEvents] = useState<ApprovalRequestAuditEvent[]>([]);
   const [comment, setComment] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -67,6 +70,7 @@ export function RequestDetailClient() {
           requestID: params.id,
         });
         setRequest(response.request);
+        await loadAuditEvents(currentSession, response.request.workspace_id, response.request.id);
         if (response.request.status !== "pending") {
           await loadDelivery(currentSession, response.request.workspace_id, response.request.id);
         }
@@ -97,6 +101,14 @@ export function RequestDetailClient() {
     }
   }
 
+  async function loadAuditEvents(currentSession: Session, currentWorkspaceID: string, requestID: string) {
+    const response = await getApprovalRequestAuditEvents(currentSession, {
+      workspaceID: currentWorkspaceID,
+      requestID,
+    });
+    setAuditEvents(response.audit_events);
+  }
+
   async function decide(decision: "approve" | "reject") {
     if (!session || !request) {
       return;
@@ -114,7 +126,10 @@ export function RequestDetailClient() {
       });
       setRequest(response.request);
       setComment("");
-      await loadDelivery(session, response.request.workspace_id, response.request.id);
+      await Promise.all([
+        loadDelivery(session, response.request.workspace_id, response.request.id),
+        loadAuditEvents(session, response.request.workspace_id, response.request.id),
+      ]);
     } catch (decisionError) {
       const message = decisionError instanceof Error ? decisionError.message : "Decision could not be saved.";
       setError(message.includes("timed out") ? "Decision request timed out. Check the API logs." : message);
@@ -205,9 +220,87 @@ export function RequestDetailClient() {
                   {JSON.stringify(request.original_action, null, 2)}
                 </pre>
               </section>
+
+              <section className="rounded-lg border border-black/10 bg-white p-5 shadow-sm">
+                <div className="flex items-center justify-between gap-4">
+                  <p className="text-xs font-semibold uppercase text-black/45">Audit timeline</p>
+                  <span className="text-xs text-black/45">{auditEvents.length} events</span>
+                </div>
+                {auditEvents.length > 0 ? (
+                  <ol className="mt-5 space-y-5">
+                    {auditEvents.map((event) => (
+                      <li className="relative border-l border-black/10 pl-5" key={event.id}>
+                        <span className="absolute -left-[5px] top-1.5 h-2.5 w-2.5 rounded-full bg-[#1f6f78]" />
+                        <div className="flex flex-wrap items-start justify-between gap-2">
+                          <div>
+                            <p className="text-sm font-semibold">{formatEventType(event.event_type)}</p>
+                            <p className="mt-1 text-xs text-black/50">
+                              {event.actor_type}
+                              {event.actor_id ? ` · ${event.actor_id}` : ""}
+                            </p>
+                          </div>
+                          <time className="text-xs text-black/45" dateTime={event.created_at}>
+                            {formatDate(event.created_at)}
+                          </time>
+                        </div>
+                        {Object.keys(event.metadata ?? {}).length > 0 ? (
+                          <dl className="mt-3 grid gap-2 rounded-md bg-[#f4f5f0] p-3 text-xs">
+                            {Object.entries(event.metadata).map(([key, value]) => (
+                              <div className="grid gap-1 sm:grid-cols-[150px_1fr]" key={key}>
+                                <dt className="font-medium text-black/45">{formatEventType(key)}</dt>
+                                <dd className="break-words text-black/70">{formatMetadataValue(value)}</dd>
+                              </div>
+                            ))}
+                          </dl>
+                        ) : null}
+                      </li>
+                    ))}
+                  </ol>
+                ) : (
+                  <p className="mt-4 text-sm text-black/60">
+                    No audit events have been recorded for this request yet.
+                  </p>
+                )}
+              </section>
             </div>
 
             <aside className="space-y-4">
+              <section className="rounded-lg border border-black/10 bg-white p-5 shadow-sm">
+                <p className="text-xs font-semibold uppercase text-black/45">Matched policy</p>
+                {request.matched_policy ? (
+                  <dl className="mt-4 space-y-3 text-sm">
+                    <div>
+                      <dt className="text-black/45">Name</dt>
+                      <dd className="mt-1 font-medium">{request.matched_policy.name}</dd>
+                    </div>
+                    <div className="flex items-center justify-between gap-4">
+                      <dt className="text-black/45">Effect</dt>
+                      <dd className="rounded-md border border-black/10 bg-[#f4f5f0] px-2 py-1 font-medium">
+                        {formatEventType(request.matched_policy.effect)}
+                      </dd>
+                    </div>
+                    <div className="flex items-center justify-between gap-4">
+                      <dt className="text-black/45">Priority</dt>
+                      <dd className="font-medium">{request.matched_policy.priority}</dd>
+                    </div>
+                    <div className="flex items-center justify-between gap-4">
+                      <dt className="text-black/45">Version</dt>
+                      <dd className="font-medium">v{request.matched_policy.version_number}</dd>
+                    </div>
+                    {request.matched_policy.deadline_seconds > 0 ? (
+                      <div className="flex items-center justify-between gap-4">
+                        <dt className="text-black/45">Deadline</dt>
+                        <dd className="font-medium">{formatDuration(request.matched_policy.deadline_seconds)}</dd>
+                      </div>
+                    ) : null}
+                  </dl>
+                ) : (
+                  <p className="mt-4 text-sm text-black/60">
+                    No policy matched. Workspace default behavior was used.
+                  </p>
+                )}
+              </section>
+
               <section className="rounded-lg border border-black/10 bg-white p-5 shadow-sm">
                 <p className="text-xs font-semibold uppercase text-black/45">Decision</p>
                 <textarea
@@ -301,4 +394,38 @@ function formatDate(value: string) {
     dateStyle: "medium",
     timeStyle: "short",
   }).format(new Date(value));
+}
+
+function formatEventType(value: string) {
+  return value
+    .split(/[._-]/)
+    .filter(Boolean)
+    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+    .join(" ");
+}
+
+function formatDuration(seconds: number) {
+  if (seconds < 60) {
+    return `${seconds}s`;
+  }
+
+  const minutes = Math.round(seconds / 60);
+  if (minutes < 60) {
+    return `${minutes}m`;
+  }
+
+  const hours = Math.round(minutes / 60);
+  return `${hours}h`;
+}
+
+function formatMetadataValue(value: unknown) {
+  if (value === null || value === undefined) {
+    return "None";
+  }
+
+  if (typeof value === "string" || typeof value === "number" || typeof value === "boolean") {
+    return String(value);
+  }
+
+  return JSON.stringify(value);
 }

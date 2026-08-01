@@ -1,6 +1,7 @@
 package approval
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"errors"
@@ -15,21 +16,32 @@ import (
 )
 
 type ApprovalRequestSummary struct {
-	ID                string          `json:"id"`
-	WorkspaceID       string          `json:"workspace_id"`
-	ActionType        string          `json:"action_type"`
-	Title             string          `json:"title"`
-	Description       string          `json:"description,omitempty"`
-	Status            string          `json:"status"`
-	DecisionRequired  bool            `json:"decision_required"`
-	SourcePlatform    string          `json:"source_platform"`
-	SourceWorkflowID  string          `json:"source_workflow_id"`
-	SourceExecutionID string          `json:"source_execution_id"`
-	OriginalAction    json.RawMessage `json:"original_action"`
-	Context           json.RawMessage `json:"context"`
-	CreatedAt         string          `json:"created_at"`
-	ResolvedAt        string          `json:"resolved_at,omitempty"`
-	ExpiresAt         string          `json:"expires_at,omitempty"`
+	ID                string                `json:"id"`
+	WorkspaceID       string                `json:"workspace_id"`
+	ActionType        string                `json:"action_type"`
+	Title             string                `json:"title"`
+	Description       string                `json:"description,omitempty"`
+	Status            string                `json:"status"`
+	DecisionRequired  bool                  `json:"decision_required"`
+	MatchedPolicy     *MatchedPolicySummary `json:"matched_policy,omitempty"`
+	SourcePlatform    string                `json:"source_platform"`
+	SourceWorkflowID  string                `json:"source_workflow_id"`
+	SourceExecutionID string                `json:"source_execution_id"`
+	OriginalAction    json.RawMessage       `json:"original_action"`
+	Context           json.RawMessage       `json:"context"`
+	CreatedAt         string                `json:"created_at"`
+	ResolvedAt        string                `json:"resolved_at,omitempty"`
+	ExpiresAt         string                `json:"expires_at,omitempty"`
+}
+
+type MatchedPolicySummary struct {
+	ID              string `json:"id"`
+	VersionID       string `json:"version_id"`
+	Name            string `json:"name"`
+	Effect          string `json:"effect"`
+	Priority        int32  `json:"priority"`
+	VersionNumber   int32  `json:"version_number"`
+	DeadlineSeconds int64  `json:"deadline_seconds"`
 }
 
 type DeliverySummary struct {
@@ -46,6 +58,18 @@ type DeliverySummary struct {
 	UpdatedAt        string `json:"updated_at"`
 }
 
+type AuditEventSummary struct {
+	ID                string          `json:"id"`
+	WorkspaceID       string          `json:"workspace_id"`
+	ApprovalRequestID string          `json:"approval_request_id"`
+	DecisionID        string          `json:"decision_id,omitempty"`
+	ActorType         string          `json:"actor_type"`
+	ActorID           string          `json:"actor_id,omitempty"`
+	EventType         string          `json:"event_type"`
+	Metadata          json.RawMessage `json:"metadata"`
+	CreatedAt         string          `json:"created_at"`
+}
+
 type ListApprovalRequestsCommand struct {
 	WorkspaceID string
 	UserID      string
@@ -60,6 +84,12 @@ type GetApprovalRequestCommand struct {
 }
 
 type GetApprovalRequestDeliveryCommand struct {
+	WorkspaceID string
+	RequestID   string
+	UserID      string
+}
+
+type ListApprovalRequestAuditEventsCommand struct {
 	WorkspaceID string
 	RequestID   string
 	UserID      string
@@ -155,6 +185,63 @@ func (s *Service) GetApprovalRequestDelivery(ctx context.Context, cmd GetApprova
 	return deliverySummary(delivery), nil
 }
 
+func (s *Service) ListApprovalRequestAuditEvents(ctx context.Context, cmd ListApprovalRequestAuditEventsCommand) ([]AuditEventSummary, error) {
+	if strings.TrimSpace(cmd.WorkspaceID) == "" || strings.TrimSpace(cmd.RequestID) == "" || strings.TrimSpace(cmd.UserID) == "" {
+		return nil, ErrInvalidRequest
+	}
+
+	workspaceID, err := pgxutil.UUIDText(cmd.WorkspaceID)
+	if err != nil {
+		return nil, identity.ErrInvalidWorkspaceID
+	}
+
+	requestID, err := pgxutil.UUIDText(cmd.RequestID)
+	if err != nil {
+		return nil, ErrInvalidRequest
+	}
+
+	userID, err := pgxutil.UUIDText(cmd.UserID)
+	if err != nil {
+		return nil, identity.ErrInvalidUserID
+	}
+
+	queries := generated.New(s.db)
+	if _, err := queries.GetWorkspaceMember(ctx, generated.GetWorkspaceMemberParams{
+		WorkspaceID: workspaceID,
+		UserID:      userID,
+	}); err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return nil, ErrForbidden
+		}
+		return nil, fmt.Errorf("load workspace member: %w", err)
+	}
+
+	if _, err := queries.GetApprovalRequestByID(ctx, generated.GetApprovalRequestByIDParams{
+		WorkspaceID: workspaceID,
+		ID:          requestID,
+	}); err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return nil, ErrNotFound
+		}
+		return nil, fmt.Errorf("load approval request: %w", err)
+	}
+
+	events, err := queries.ListAuditEventsByRequestID(ctx, generated.ListAuditEventsByRequestIDParams{
+		WorkspaceID:       workspaceID,
+		ApprovalRequestID: requestID,
+	})
+	if err != nil {
+		return nil, fmt.Errorf("list approval request audit events: %w", err)
+	}
+
+	summaries := make([]AuditEventSummary, 0, len(events))
+	for _, event := range events {
+		summaries = append(summaries, auditEventSummary(event))
+	}
+
+	return summaries, nil
+}
+
 func (s *Service) ListApprovalRequests(ctx context.Context, cmd ListApprovalRequestsCommand) ([]ApprovalRequestSummary, error) {
 	if strings.TrimSpace(cmd.WorkspaceID) == "" || strings.TrimSpace(cmd.UserID) == "" {
 		return nil, ErrInvalidRequest
@@ -212,6 +299,7 @@ func approvalRequestSummary(request generated.ApprovalRequest) ApprovalRequestSu
 		Description:       request.Description.String,
 		Status:            string(request.Status),
 		DecisionRequired:  request.DecisionRequired,
+		MatchedPolicy:     matchedPolicySummary(request.MatchedPolicySnapshot),
 		SourcePlatform:    request.SourcePlatform,
 		SourceWorkflowID:  request.SourceWorkflowID,
 		SourceExecutionID: request.SourceExecutionID,
@@ -228,6 +316,65 @@ func approvalRequestSummary(request generated.ApprovalRequest) ApprovalRequestSu
 	}
 
 	return summary
+}
+
+func matchedPolicySummary(snapshot []byte) *MatchedPolicySummary {
+	if len(bytes.TrimSpace(snapshot)) == 0 {
+		return nil
+	}
+
+	var parsed struct {
+		PolicyID         string          `json:"policy_id"`
+		PolicyVersionID  string          `json:"policy_version_id"`
+		Name             string          `json:"name"`
+		Priority         int32           `json:"priority"`
+		VersionNumber    int32           `json:"version_number"`
+		Effect           string          `json:"effect"`
+		ApprovalSettings json.RawMessage `json:"approval_settings"`
+	}
+	if err := json.Unmarshal(snapshot, &parsed); err != nil {
+		return nil
+	}
+
+	policyID := strings.TrimSpace(parsed.PolicyID)
+	versionID := strings.TrimSpace(parsed.PolicyVersionID)
+	if policyID == "" || versionID == "" {
+		return nil
+	}
+
+	summary := &MatchedPolicySummary{
+		ID:            policyID,
+		VersionID:     versionID,
+		Name:          parsed.Name,
+		Effect:        parsed.Effect,
+		Priority:      parsed.Priority,
+		VersionNumber: parsed.VersionNumber,
+	}
+
+	if len(bytes.TrimSpace(parsed.ApprovalSettings)) > 0 && !bytes.Equal(bytes.TrimSpace(parsed.ApprovalSettings), []byte("null")) {
+		var settings struct {
+			DeadlineSeconds int64 `json:"deadline_seconds"`
+		}
+		if err := json.Unmarshal(parsed.ApprovalSettings, &settings); err == nil {
+			summary.DeadlineSeconds = settings.DeadlineSeconds
+		}
+	}
+
+	return summary
+}
+
+func auditEventSummary(event generated.AuditEvent) AuditEventSummary {
+	return AuditEventSummary{
+		ID:                pgxutil.UUIDString(event.ID),
+		WorkspaceID:       pgxutil.UUIDString(event.WorkspaceID),
+		ApprovalRequestID: pgxutil.UUIDString(event.ApprovalRequestID),
+		DecisionID:        pgxutil.UUIDString(event.DecisionID),
+		ActorType:         event.ActorType,
+		ActorID:           pgxutil.UUIDString(event.ActorID),
+		EventType:         event.EventType,
+		Metadata:          json.RawMessage(event.Metadata),
+		CreatedAt:         event.CreatedAt.Time.UTC().Format("2006-01-02T15:04:05Z07:00"),
+	}
 }
 
 func deliverySummary(delivery generated.DecisionDelivery) DeliverySummary {

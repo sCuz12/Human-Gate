@@ -42,6 +42,7 @@ func NewRouter(logger *slog.Logger, db *pgxpool.Pool, supabaseAuth *supabaseauth
 			r.Use(middleware.SupabaseAuth(supabaseAuth))
 			r.Get("/approval-requests", approvalHandler.ListApprovalRequests)
 			r.Get("/approval-requests/{id}", approvalHandler.GetApprovalRequest)
+			r.Get("/approval-requests/{id}/audit-events", approvalHandler.ListApprovalRequestAuditEvents)
 			r.Get("/approval-requests/{id}/delivery", approvalHandler.GetApprovalRequestDelivery)
 			r.Post("/approval-requests/{id}/approve", approvalHandler.ApproveApprovalRequest)
 			r.Post("/approval-requests/{id}/reject", approvalHandler.RejectApprovalRequest)

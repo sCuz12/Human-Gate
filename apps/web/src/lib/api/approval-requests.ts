@@ -12,6 +12,7 @@ export type ApprovalRequest = {
   description?: string;
   status: string;
   decision_required: boolean;
+  matched_policy?: MatchedPolicy;
   source_platform: string;
   source_workflow_id: string;
   source_execution_id: string;
@@ -27,6 +28,16 @@ export type ApprovalRequest = {
   expires_at?: string;
 };
 
+export type MatchedPolicy = {
+  id: string;
+  version_id: string;
+  name: string;
+  effect: string;
+  priority: number;
+  version_number: number;
+  deadline_seconds: number;
+};
+
 export type DecisionDelivery = {
   id: string;
   decision_id: string;
@@ -39,6 +50,18 @@ export type DecisionDelivery = {
   delivered_at?: string;
   acknowledged_at?: string;
   updated_at: string;
+};
+
+export type ApprovalRequestAuditEvent = {
+  id: string;
+  workspace_id: string;
+  approval_request_id: string;
+  decision_id?: string;
+  actor_type: string;
+  actor_id?: string;
+  event_type: string;
+  metadata: Record<string, unknown>;
+  created_at: string;
 };
 
 type ListApprovalRequestsResponse = {
@@ -103,6 +126,27 @@ export async function getApprovalRequestDelivery(
 
   return apiFetch<GetApprovalRequestDeliveryResponse>(
     `/api/v1/approval-requests/${input.requestID}/delivery?${params.toString()}`,
+    session,
+  );
+}
+
+type GetApprovalRequestAuditEventsResponse = {
+  audit_events: ApprovalRequestAuditEvent[];
+};
+
+export async function getApprovalRequestAuditEvents(
+  session: Session,
+  input: {
+    workspaceID: string;
+    requestID: string;
+  },
+) {
+  const params = new URLSearchParams({
+    workspace_id: input.workspaceID,
+  });
+
+  return apiFetch<GetApprovalRequestAuditEventsResponse>(
+    `/api/v1/approval-requests/${input.requestID}/audit-events?${params.toString()}`,
     session,
   );
 }

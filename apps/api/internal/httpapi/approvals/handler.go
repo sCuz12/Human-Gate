@@ -84,6 +84,10 @@ type getApprovalRequestDeliveryResponse struct {
 	Delivery approval.DeliverySummary `json:"delivery"`
 }
 
+type listApprovalRequestAuditEventsResponse struct {
+	AuditEvents []approval.AuditEventSummary `json:"audit_events"`
+}
+
 type decideApprovalRequestRequest struct {
 	WorkspaceID string `json:"workspace_id"`
 	Comment     string `json:"comment"`
@@ -257,6 +261,26 @@ func (h *Handler) GetApprovalRequestDelivery(w http.ResponseWriter, r *http.Requ
 	}
 
 	writeJSON(w, http.StatusOK, getApprovalRequestDeliveryResponse{Delivery: delivery})
+}
+
+func (h *Handler) ListApprovalRequestAuditEvents(w http.ResponseWriter, r *http.Request) {
+	user, ok := userctx.FromContext(r.Context())
+	if !ok {
+		writeError(w, http.StatusUnauthorized, "unauthorized", "Authentication is required.", "")
+		return
+	}
+
+	events, err := h.approvals.ListApprovalRequestAuditEvents(r.Context(), approval.ListApprovalRequestAuditEventsCommand{
+		WorkspaceID: strings.TrimSpace(r.URL.Query().Get("workspace_id")),
+		RequestID:   strings.TrimSpace(chi.URLParam(r, "id")),
+		UserID:      user.UserID,
+	})
+	if err != nil {
+		h.writeApprovalError(r, w, err)
+		return
+	}
+
+	writeJSON(w, http.StatusOK, listApprovalRequestAuditEventsResponse{AuditEvents: events})
 }
 
 func (h *Handler) ApproveApprovalRequest(w http.ResponseWriter, r *http.Request) {
