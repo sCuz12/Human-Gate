@@ -50,6 +50,8 @@ func NewRouter(logger *slog.Logger, db *pgxpool.Pool, supabaseAuth *supabaseauth
 			r.Post("/api-keys", apiKeyHandler.CreateAPIKey)
 			r.Get("/policies", policyHandler.ListPolicies)
 			r.Post("/policies", policyHandler.CreatePolicy)
+			r.Patch("/policies/{id}", policyHandler.UpdatePolicy)
+			r.Delete("/policies/{id}", policyHandler.DeletePolicy)
 		})
 	})
 
