@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import type { Session } from "@supabase/supabase-js";
 
 import { APIKeyGenerator } from "@/components/dashboard/api-key-generator";
+import { PolicyManager } from "@/components/dashboard/policy-manager";
 import { WorkspaceOnboarding } from "@/components/dashboard/workspace-onboarding";
 import type { APIKey } from "@/lib/api/api-keys";
 import { listWorkspaces, type Workspace } from "@/lib/api/workspaces";
@@ -159,7 +160,7 @@ export function DashboardClient() {
                         </span>
                       </p>
                       {session ? (
-                        <div className="mt-4">
+                        <div className="mt-4 space-y-4">
                           <APIKeyGenerator
                             initialToken={
                               generatedToken?.workspace_id === workspace.id
@@ -169,6 +170,7 @@ export function DashboardClient() {
                             session={session}
                             workspace={workspace}
                           />
+                          <PolicyManager session={session} workspace={workspace} />
                         </div>
                       ) : null}
                     </div>

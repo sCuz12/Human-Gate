@@ -11,11 +11,13 @@ import (
 	"humangate/apps/api/internal/httpapi/approvals"
 	"humangate/apps/api/internal/httpapi/health"
 	"humangate/apps/api/internal/httpapi/middleware"
+	"humangate/apps/api/internal/httpapi/policies"
 	"humangate/apps/api/internal/httpapi/workspaces"
 	"humangate/internal/approval"
 	identityapikeys "humangate/internal/identity/apikeys"
 	"humangate/internal/identity/supabaseauth"
 	identityworkspaces "humangate/internal/identity/workspaces"
+	"humangate/internal/policy"
 )
 
 func NewRouter(logger *slog.Logger, db *pgxpool.Pool, supabaseAuth *supabaseauth.Service, allowedOrigins []string) http.Handler {
@@ -30,6 +32,7 @@ func NewRouter(logger *slog.Logger, db *pgxpool.Pool, supabaseAuth *supabaseauth
 	)
 	apiKeyHandler := apikeys.NewHandler(identityapikeys.NewService(db, nil))
 	workspaceHandler := workspaces.NewHandler(identityworkspaces.NewService(db), logger)
+	policyHandler := policies.NewHandler(policy.NewService(db), logger)
 
 	router.Get("/healthz", health.Handle())
 	router.Route("/api/v1", func(r chi.Router) {
@@ -45,6 +48,8 @@ func NewRouter(logger *slog.Logger, db *pgxpool.Pool, supabaseAuth *supabaseauth
 			r.Get("/workspaces", workspaceHandler.ListWorkspaces)
 			r.Post("/workspaces", workspaceHandler.CreateWorkspace)
 			r.Post("/api-keys", apiKeyHandler.CreateAPIKey)
+			r.Get("/policies", policyHandler.ListPolicies)
+			r.Post("/policies", policyHandler.CreatePolicy)
 		})
 	})
 

@@ -326,7 +326,7 @@ func matchesPolicy(policy generated.ListActivePolicyVersionsForWorkspaceRow, cmd
 			return false, pgtype.UUID{}, pgtype.UUID{}, pgtype.Timestamptz{}, fmt.Errorf("unmarshal policy conditions: %w", err)
 		}
 	}
-
+	fmt.Println(conditions)
 	for _, condition := range conditions {
 		if !evaluateCondition(condition, cmd) {
 			return false, pgtype.UUID{}, pgtype.UUID{}, pgtype.Timestamptz{}, nil
