@@ -190,78 +190,8 @@ func (s *Service) SubmitApprovalRequest(ctx context.Context, cmd SubmitApprovalR
 		return SubmitResult{}, fmt.Errorf("create audit event: %w", err)
 	}
 
-	if request.Status == generated.ApprovalStatusAllowed {
-		createdDecision, err := queries.CreateApprovalDecision(ctx, generated.CreateApprovalDecisionParams{
-			WorkspaceID:        workspaceID,
-			ApprovalRequestID:  request.ID,
-			Decision:           generated.DecisionTypeAllowed,
-			OriginalActionHash: request.OriginalActionHash,
-			ApprovedAction:     string(request.OriginalAction),
-			ApprovedActionHash: pgxutil.Text(request.OriginalActionHash),
-			ChangedFields:      `[]`,
-			Comment:            pgxutil.Text("Allowed automatically by policy."),
-			DecidedBy:          pgtype.UUID{},
-			IssuedAt:           pgxutil.Timestamptz(now),
-			ExpiresAt:          pgtype.Timestamptz{},
-		})
-		if err != nil {
-			return SubmitResult{}, fmt.Errorf("create automatic allowed decision: %w", err)
-		}
-
-		createdDelivery, err := queries.CreateDecisionDelivery(ctx, generated.CreateDecisionDeliveryParams{
-			WorkspaceID:          workspaceID,
-			DecisionID:           createdDecision.ID,
-			ContinuationTargetID: continuationTarget.ID,
-			Status:               generated.DeliveryStatusPending,
-			NextAttemptAt:        pgxutil.Timestamptz(now),
-		})
-		if err != nil {
-			return SubmitResult{}, fmt.Errorf("create automatic allowed delivery: %w", err)
-		}
-
-		allowedAuditMetadata, err := marshalJSONObject(map[string]any{
-			"decision":  generated.DecisionTypeAllowed,
-			"automatic": true,
-		})
-		if err != nil {
-			return SubmitResult{}, fmt.Errorf("marshal automatic allowed audit metadata: %w", err)
-		}
-
-		if _, err := queries.CreateAuditEvent(ctx, generated.CreateAuditEventParams{
-			WorkspaceID:       workspaceID,
-			ApprovalRequestID: request.ID,
-			DecisionID:        createdDecision.ID,
-			ActorType:         "system",
-			ActorID:           pgtype.UUID{},
-			EventType:         "approval_request.allowed",
-			Metadata:          string(allowedAuditMetadata),
-		}); err != nil {
-			return SubmitResult{}, fmt.Errorf("create automatic allowed audit event: %w", err)
-		}
-
-		deliveryAuditMetadata, err := marshalJSONObject(map[string]any{
-			"delivery_id":              pgxutil.UUIDString(createdDelivery.ID),
-			"continuation_target_id":   pgxutil.UUIDString(continuationTarget.ID),
-			"delivery_status":          createdDelivery.Status,
-			"continuation_strategy":    continuationTarget.Strategy,
-			"continuation_platform":    continuationTarget.Platform,
-			"delivery_next_attempt_at": now,
-		})
-		if err != nil {
-			return SubmitResult{}, fmt.Errorf("marshal automatic allowed delivery audit metadata: %w", err)
-		}
-
-		if _, err := queries.CreateAuditEvent(ctx, generated.CreateAuditEventParams{
-			WorkspaceID:       workspaceID,
-			ApprovalRequestID: request.ID,
-			DecisionID:        createdDecision.ID,
-			ActorType:         "system",
-			ActorID:           pgtype.UUID{},
-			EventType:         "decision.delivery_scheduled",
-			Metadata:          string(deliveryAuditMetadata),
-		}); err != nil {
-			return SubmitResult{}, fmt.Errorf("create automatic allowed delivery audit event: %w", err)
-		}
+	if err := createAutomaticPolicyDecision(ctx, queries, request, continuationTarget, now); err != nil {
+		return SubmitResult{}, err
 	}
 
 	if err := tx.Commit(ctx); err != nil {
@@ -269,6 +199,108 @@ func (s *Service) SubmitApprovalRequest(ctx context.Context, cmd SubmitApprovalR
 	}
 
 	return SubmitResult{Request: request}, nil
+}
+
+func createAutomaticPolicyDecision(ctx context.Context, queries *generated.Queries, request generated.ApprovalRequest, continuationTarget generated.ContinuationTarget, now time.Time) error {
+	decision, eventType, comment, approvedAction, approvedActionHash, ok := automaticPolicyDecision(request)
+	if !ok {
+		return nil
+	}
+
+	createdDecision, err := queries.CreateApprovalDecision(ctx, generated.CreateApprovalDecisionParams{
+		WorkspaceID:        request.WorkspaceID,
+		ApprovalRequestID:  request.ID,
+		Decision:           decision,
+		OriginalActionHash: request.OriginalActionHash,
+		ApprovedAction:     approvedAction,
+		ApprovedActionHash: approvedActionHash,
+		ChangedFields:      `[]`,
+		Comment:            pgxutil.Text(comment),
+		DecidedBy:          pgtype.UUID{},
+		IssuedAt:           pgxutil.Timestamptz(now),
+		ExpiresAt:          pgtype.Timestamptz{},
+	})
+	if err != nil {
+		return fmt.Errorf("create automatic policy decision: %w", err)
+	}
+
+	createdDelivery, err := queries.CreateDecisionDelivery(ctx, generated.CreateDecisionDeliveryParams{
+		WorkspaceID:          request.WorkspaceID,
+		DecisionID:           createdDecision.ID,
+		ContinuationTargetID: continuationTarget.ID,
+		Status:               generated.DeliveryStatusPending,
+		NextAttemptAt:        pgxutil.Timestamptz(now),
+	})
+	if err != nil {
+		return fmt.Errorf("create automatic policy delivery: %w", err)
+	}
+
+	decisionAuditMetadata, err := marshalJSONObject(map[string]any{
+		"decision":  decision,
+		"automatic": true,
+	})
+	if err != nil {
+		return fmt.Errorf("marshal automatic policy audit metadata: %w", err)
+	}
+
+	if _, err := queries.CreateAuditEvent(ctx, generated.CreateAuditEventParams{
+		WorkspaceID:       request.WorkspaceID,
+		ApprovalRequestID: request.ID,
+		DecisionID:        createdDecision.ID,
+		ActorType:         "system",
+		ActorID:           pgtype.UUID{},
+		EventType:         eventType,
+		Metadata:          string(decisionAuditMetadata),
+	}); err != nil {
+		return fmt.Errorf("create automatic policy audit event: %w", err)
+	}
+
+	deliveryAuditMetadata, err := marshalJSONObject(map[string]any{
+		"delivery_id":              pgxutil.UUIDString(createdDelivery.ID),
+		"continuation_target_id":   pgxutil.UUIDString(continuationTarget.ID),
+		"delivery_status":          createdDelivery.Status,
+		"continuation_strategy":    continuationTarget.Strategy,
+		"continuation_platform":    continuationTarget.Platform,
+		"delivery_next_attempt_at": now,
+	})
+	if err != nil {
+		return fmt.Errorf("marshal automatic policy delivery audit metadata: %w", err)
+	}
+
+	if _, err := queries.CreateAuditEvent(ctx, generated.CreateAuditEventParams{
+		WorkspaceID:       request.WorkspaceID,
+		ApprovalRequestID: request.ID,
+		DecisionID:        createdDecision.ID,
+		ActorType:         "system",
+		ActorID:           pgtype.UUID{},
+		EventType:         "decision.delivery_scheduled",
+		Metadata:          string(deliveryAuditMetadata),
+	}); err != nil {
+		return fmt.Errorf("create automatic policy delivery audit event: %w", err)
+	}
+
+	return nil
+}
+
+func automaticPolicyDecision(request generated.ApprovalRequest) (generated.DecisionType, string, string, string, pgtype.Text, bool) {
+	switch request.Status {
+	case generated.ApprovalStatusAllowed:
+		return generated.DecisionTypeAllowed,
+			"approval_request.allowed",
+			"Allowed automatically by policy.",
+			string(request.OriginalAction),
+			pgxutil.Text(request.OriginalActionHash),
+			true
+	case generated.ApprovalStatusBlocked:
+		return generated.DecisionTypeBlocked,
+			"approval_request.blocked",
+			"Blocked automatically by policy.",
+			`null`,
+			pgtype.Text{},
+			true
+	default:
+		return "", "", "", "", pgtype.Text{}, false
+	}
 }
 
 func validateSubmitCommand(cmd SubmitApprovalRequestCommand) error {
