@@ -49,6 +49,10 @@ export function RequestDetailClient() {
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState<"approve" | "reject" | null>(null);
+  const [now, setNow] = useState(() => Date.now());
+
+  const deadline = request ? getDeadlineInfo(request.expires_at, request.status, now) : null;
+  const decisionsDisabled = request?.status !== "pending" || deadline?.state === "expired";
 
   useEffect(() => {
     const supabase = getSupabaseBrowserClient();
@@ -84,6 +88,15 @@ export function RequestDetailClient() {
 
     void load();
   }, [params.id, router, workspaceID]);
+
+  useEffect(() => {
+    if (!request?.expires_at || request.status !== "pending") {
+      return;
+    }
+
+    const intervalID = window.setInterval(() => setNow(Date.now()), 1000);
+    return () => window.clearInterval(intervalID);
+  }, [request?.expires_at, request?.status]);
 
   async function loadDelivery(currentSession: Session, currentWorkspaceID: string, requestID: string) {
     try {
@@ -266,6 +279,57 @@ export function RequestDetailClient() {
 
             <aside className="space-y-4">
               <section className="rounded-lg border border-black/10 bg-white p-5 shadow-sm">
+                <div className="flex items-start justify-between gap-4">
+                  <div>
+                    <p className="text-xs font-semibold uppercase text-black/45">Decision</p>
+                    <p className="mt-1 text-sm text-black/60">
+                      Record the final decision.
+                    </p>
+                  </div>
+                  <span
+                    className={[
+                      "rounded-md border px-2 py-1 text-xs font-semibold",
+                      decisionsDisabled
+                        ? "border-black/10 bg-[#f4f5f0] text-black/45"
+                        : "border-[#176a44]/20 bg-[#edf8f1] text-[#176a44]",
+                    ].join(" ")}
+                  >
+                    {decisionsDisabled ? "Locked" : "Ready"}
+                  </span>
+                </div>
+                <textarea
+                  className="mt-4 min-h-28 w-full rounded-md border border-black/10 bg-white px-3 py-2 text-sm outline-none transition placeholder:text-black/35 focus:border-[#1f6f78] focus:ring-2 focus:ring-[#1f6f78]/15 disabled:bg-[#f4f5f0] disabled:text-black/45"
+                  disabled={decisionsDisabled}
+                  onChange={(event) => setComment(event.target.value)}
+                  placeholder="Optional comment"
+                  value={comment}
+                />
+                {deadline?.state === "expired" ? (
+                  <p className="mt-3 rounded-md bg-[#fff2ec] p-3 text-sm text-[#8d3419]">
+                    This request has expired and can no longer be approved or rejected.
+                  </p>
+                ) : null}
+                <div className="mt-4 grid gap-3">
+                  <button
+                    className="rounded-md bg-[#176a44] px-4 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-[#0f5636] focus:outline-none focus:ring-2 focus:ring-[#176a44]/30 focus:ring-offset-2 disabled:cursor-not-allowed disabled:bg-[#e5e5df] disabled:text-black/40 disabled:shadow-none"
+                    disabled={decisionsDisabled || isSubmitting !== null}
+                    onClick={() => void decide("approve")}
+                    type="button"
+                  >
+                    {isSubmitting === "approve" ? "Approving..." : "Approve"}
+                  </button>
+                  <button
+                    className="rounded-md border border-[#b74b2a]/35 bg-white px-4 py-3 text-sm font-semibold text-[#8d3419] shadow-sm transition hover:border-[#b74b2a]/55 hover:bg-[#fff2ec] focus:outline-none focus:ring-2 focus:ring-[#b74b2a]/25 focus:ring-offset-2 disabled:cursor-not-allowed disabled:border-black/10 disabled:bg-[#f4f5f0] disabled:text-black/40 disabled:shadow-none"
+                    disabled={decisionsDisabled || isSubmitting !== null}
+                    onClick={() => void decide("reject")}
+                    type="button"
+                  >
+                    {isSubmitting === "reject" ? "Rejecting..." : "Reject"}
+                  </button>
+                </div>
+              </section>
+
+              <section className="rounded-lg border border-black/10 bg-white p-5 shadow-sm">
                 <p className="text-xs font-semibold uppercase text-black/45">Matched policy</p>
                 {request.matched_policy ? (
                   <dl className="mt-4 space-y-3 text-sm">
@@ -301,33 +365,72 @@ export function RequestDetailClient() {
                 )}
               </section>
 
-              <section className="rounded-lg border border-black/10 bg-white p-5 shadow-sm">
-                <p className="text-xs font-semibold uppercase text-black/45">Decision</p>
-                <textarea
-                  className="mt-4 min-h-28 w-full rounded-md border border-black/10 bg-white px-3 py-2 text-sm outline-none focus:border-[#1f6f78] focus:ring-2 focus:ring-[#1f6f78]/15"
-                  disabled={request.status !== "pending"}
-                  onChange={(event) => setComment(event.target.value)}
-                  placeholder="Optional comment"
-                  value={comment}
-                />
-                <div className="mt-4 grid gap-3">
-                  <button
-                    className="rounded-md bg-[#176a44] px-4 py-3 text-sm font-semibold text-white transition hover:bg-[#0f5636] disabled:cursor-not-allowed disabled:opacity-50"
-                    disabled={request.status !== "pending" || isSubmitting !== null}
-                    onClick={() => void decide("approve")}
-                    type="button"
+              <section
+                className={[
+                  "rounded-lg border p-5 shadow-sm",
+                  deadline?.state === "expired"
+                    ? "border-[#b74b2a]/30 bg-[#fff2ec]"
+                    : deadline?.state === "warning"
+                      ? "border-[#b68422]/35 bg-[#fff8e8]"
+                      : "border-black/10 bg-white",
+                ].join(" ")}
+              >
+                <div className="flex items-start justify-between gap-4">
+                  <p
+                    className={[
+                      "text-xs font-semibold uppercase",
+                      deadline?.state === "expired"
+                        ? "text-[#8d3419]"
+                        : deadline?.state === "warning"
+                          ? "text-[#8a5a0a]"
+                          : "text-black/45",
+                    ].join(" ")}
                   >
-                    {isSubmitting === "approve" ? "Approving..." : "Approve"}
-                  </button>
-                  <button
-                    className="rounded-md border border-[#b74b2a]/30 bg-white px-4 py-3 text-sm font-semibold text-[#8d3419] transition hover:bg-[#fff2ec] disabled:cursor-not-allowed disabled:opacity-50"
-                    disabled={request.status !== "pending" || isSubmitting !== null}
-                    onClick={() => void decide("reject")}
-                    type="button"
-                  >
-                    {isSubmitting === "reject" ? "Rejecting..." : "Reject"}
-                  </button>
+                    Deadline
+                  </p>
+                  {deadline ? (
+                    <span
+                      className={[
+                        "rounded-md border px-2 py-1 text-xs font-semibold",
+                        deadline.state === "expired"
+                          ? "border-[#b74b2a]/30 bg-white text-[#8d3419]"
+                          : deadline.state === "warning"
+                            ? "border-[#b68422]/35 bg-white text-[#7a4e06]"
+                            : "border-black/10 bg-[#f4f5f0] text-black/65",
+                      ].join(" ")}
+                    >
+                      {deadline.label}
+                    </span>
+                  ) : null}
                 </div>
+
+                {deadline ? (
+                  <dl className="mt-4 space-y-3">
+                    <div>
+                      <dt className="text-sm text-black/45">Expires in</dt>
+                      <dd
+                        className={[
+                          "mt-1 font-mono text-3xl font-semibold tabular-nums",
+                          deadline.state === "expired"
+                            ? "text-[#8d3419]"
+                            : deadline.state === "warning"
+                              ? "text-[#7a4e06]"
+                              : "text-[#15110d]",
+                        ].join(" ")}
+                      >
+                        {deadline.remaining}
+                      </dd>
+                    </div>
+                    <div className="flex items-center justify-between gap-4 text-sm">
+                      <dt className="text-black/45">Expires at</dt>
+                      <dd className="font-medium">{deadline.expiresAt}</dd>
+                    </div>
+                  </dl>
+                ) : (
+                  <p className="mt-4 text-sm text-black/60">
+                    No deadline is set for this request.
+                  </p>
+                )}
               </section>
 
               <section className="rounded-lg border border-black/10 bg-white p-5 shadow-sm">
@@ -416,6 +519,38 @@ function formatDuration(seconds: number) {
 
   const hours = Math.round(minutes / 60);
   return `${hours}h`;
+}
+
+function getDeadlineInfo(expiresAt: string | undefined, status: string, now: number) {
+  if (!expiresAt) {
+    return null;
+  }
+
+  const expiresAtDate = new Date(expiresAt);
+  const remainingMs = expiresAtDate.getTime() - now;
+  const state = status === "expired" || remainingMs <= 0 ? "expired" : remainingMs <= 5 * 60 * 1000 ? "warning" : "normal";
+
+  return {
+    state,
+    label: state === "expired" ? "Expired" : state === "warning" ? "Warning" : "Active",
+    remaining: state === "expired" ? "Expired" : formatRemainingTime(remainingMs),
+    expiresAt: formatClockTime(expiresAtDate),
+  };
+}
+
+function formatRemainingTime(milliseconds: number) {
+  const totalSeconds = Math.max(0, Math.ceil(milliseconds / 1000));
+  const minutes = Math.floor(totalSeconds / 60);
+  const seconds = totalSeconds % 60;
+
+  return `${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`;
+}
+
+function formatClockTime(value: Date) {
+  return new Intl.DateTimeFormat(undefined, {
+    hour: "2-digit",
+    minute: "2-digit",
+  }).format(value);
 }
 
 function formatMetadataValue(value: unknown) {
