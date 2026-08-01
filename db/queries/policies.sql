@@ -16,6 +16,28 @@ insert into public.policies (
 )
 returning *;
 
+-- name: UpdatePolicy :one
+update public.policies
+set name = sqlc.arg(name),
+    description = sqlc.arg(description),
+    priority = sqlc.arg(priority),
+    is_active = sqlc.arg(is_active),
+    updated_at = sqlc.arg(updated_at)
+where workspace_id = sqlc.arg(workspace_id)
+  and id = sqlc.arg(id)
+  and deleted_at is null
+returning *;
+
+-- name: SoftDeletePolicy :one
+update public.policies
+set is_active = false,
+    deleted_at = sqlc.arg(deleted_at),
+    updated_at = sqlc.arg(deleted_at)
+where workspace_id = sqlc.arg(workspace_id)
+  and id = sqlc.arg(id)
+  and deleted_at is null
+returning *;
+
 -- name: CreatePolicyVersion :one
 insert into public.policy_versions (
     workspace_id,
@@ -35,6 +57,15 @@ insert into public.policy_versions (
     sqlc.arg(created_by)
 )
 returning *;
+
+-- name: GetLatestPolicyVersionForUpdate :one
+select *
+from public.policy_versions
+where workspace_id = $1
+  and policy_id = $2
+order by version_number desc
+limit 1
+for update;
 
 -- name: ListPolicySummariesForWorkspace :many
 select
@@ -57,6 +88,7 @@ join public.policy_versions pv
   on pv.policy_id = p.id
  and pv.workspace_id = p.workspace_id
 where p.workspace_id = $1
+  and p.deleted_at is null
   and pv.version_number = (
       select max(pv2.version_number)
       from public.policy_versions pv2
@@ -84,6 +116,7 @@ join public.policy_versions pv
  and pv.workspace_id = p.workspace_id
 where p.workspace_id = $1
   and p.is_active = true
+  and p.deleted_at is null
   and pv.version_number = (
       select max(pv2.version_number)
       from public.policy_versions pv2

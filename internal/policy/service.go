@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"strings"
+	"time"
 
 	"humangate/db/generated"
 	"humangate/internal/identity"
@@ -36,6 +37,25 @@ type CreatePolicyCommand struct {
 	Conditions      []Condition
 	Effect          string
 	DeadlineSeconds int64
+}
+
+type UpdatePolicyCommand struct {
+	WorkspaceID     string
+	PolicyID        string
+	UserID          string
+	Name            string
+	Description     string
+	Priority        int32
+	IsActive        bool
+	Conditions      []Condition
+	Effect          string
+	DeadlineSeconds int64
+}
+
+type DeletePolicyCommand struct {
+	WorkspaceID string
+	PolicyID    string
+	UserID      string
 }
 
 type PolicySummary struct {
@@ -174,6 +194,133 @@ func (s *Service) ListPolicies(ctx context.Context, workspaceIDValue string, use
 	return policies, nil
 }
 
+func (s *Service) UpdatePolicy(ctx context.Context, cmd UpdatePolicyCommand) (PolicySummary, error) {
+	if strings.TrimSpace(cmd.WorkspaceID) == "" || strings.TrimSpace(cmd.PolicyID) == "" || strings.TrimSpace(cmd.UserID) == "" || strings.TrimSpace(cmd.Name) == "" {
+		return PolicySummary{}, ErrInvalidRequest
+	}
+
+	workspaceID, policyID, userID, err := parsePolicyMutationIDs(cmd.WorkspaceID, cmd.PolicyID, cmd.UserID)
+	if err != nil {
+		return PolicySummary{}, err
+	}
+
+	effect, err := parseEffect(cmd.Effect)
+	if err != nil {
+		return PolicySummary{}, err
+	}
+
+	if cmd.Priority <= 0 {
+		cmd.Priority = 100
+	}
+
+	conditions, err := normalizeConditions(cmd.Conditions)
+	if err != nil {
+		return PolicySummary{}, err
+	}
+
+	approvalSettings, err := normalizeApprovalSettings(effect, cmd.DeadlineSeconds)
+	if err != nil {
+		return PolicySummary{}, err
+	}
+
+	tx, err := s.db.BeginTx(ctx, pgx.TxOptions{})
+	if err != nil {
+		return PolicySummary{}, fmt.Errorf("begin policy update transaction: %w", err)
+	}
+	defer tx.Rollback(ctx)
+
+	queries := generated.New(tx)
+	if err := requirePolicyManager(ctx, queries, workspaceID, userID); err != nil {
+		return PolicySummary{}, err
+	}
+
+	latest, err := queries.GetLatestPolicyVersionForUpdate(ctx, generated.GetLatestPolicyVersionForUpdateParams{
+		WorkspaceID: workspaceID,
+		PolicyID:    policyID,
+	})
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return PolicySummary{}, ErrNotFound
+		}
+		return PolicySummary{}, fmt.Errorf("load latest policy version: %w", err)
+	}
+
+	updatedPolicy, err := queries.UpdatePolicy(ctx, generated.UpdatePolicyParams{
+		Name:        strings.TrimSpace(cmd.Name),
+		Description: pgxutil.Text(cmd.Description),
+		Priority:    cmd.Priority,
+		IsActive:    cmd.IsActive,
+		UpdatedAt:   pgxutil.Timestamptz(time.Now().UTC()),
+		WorkspaceID: workspaceID,
+		ID:          policyID,
+	})
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return PolicySummary{}, ErrNotFound
+		}
+		return PolicySummary{}, fmt.Errorf("update policy: %w", err)
+	}
+
+	version, err := queries.CreatePolicyVersion(ctx, generated.CreatePolicyVersionParams{
+		WorkspaceID:      workspaceID,
+		PolicyID:         policyID,
+		VersionNumber:    latest.VersionNumber + 1,
+		Conditions:       string(conditions),
+		Effect:           effect,
+		ApprovalSettings: string(approvalSettings),
+		CreatedBy:        userID,
+	})
+	if err != nil {
+		return PolicySummary{}, fmt.Errorf("create updated policy version: %w", err)
+	}
+
+	if err := tx.Commit(ctx); err != nil {
+		return PolicySummary{}, fmt.Errorf("commit policy update transaction: %w", err)
+	}
+
+	return policySummaryFromPolicy(updatedPolicy, version), nil
+}
+
+func (s *Service) DeletePolicy(ctx context.Context, cmd DeletePolicyCommand) error {
+	if strings.TrimSpace(cmd.WorkspaceID) == "" || strings.TrimSpace(cmd.PolicyID) == "" || strings.TrimSpace(cmd.UserID) == "" {
+		return ErrInvalidRequest
+	}
+
+	workspaceID, policyID, userID, err := parsePolicyMutationIDs(cmd.WorkspaceID, cmd.PolicyID, cmd.UserID)
+	if err != nil {
+		return err
+	}
+
+	tx, err := s.db.BeginTx(ctx, pgx.TxOptions{})
+	if err != nil {
+		return fmt.Errorf("begin policy delete transaction: %w", err)
+	}
+	defer tx.Rollback(ctx)
+
+	queries := generated.New(tx)
+	if err := requirePolicyManager(ctx, queries, workspaceID, userID); err != nil {
+		return err
+	}
+
+	now := time.Now().UTC()
+	if _, err := queries.SoftDeletePolicy(ctx, generated.SoftDeletePolicyParams{
+		DeletedAt:   pgxutil.Timestamptz(now),
+		WorkspaceID: workspaceID,
+		ID:          policyID,
+	}); err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return ErrNotFound
+		}
+		return fmt.Errorf("soft delete policy: %w", err)
+	}
+
+	if err := tx.Commit(ctx); err != nil {
+		return fmt.Errorf("commit policy delete transaction: %w", err)
+	}
+
+	return nil
+}
+
 func requirePolicyManager(ctx context.Context, queries *generated.Queries, workspaceID pgtype.UUID, userID pgtype.UUID) error {
 	member, err := queries.GetWorkspaceMember(ctx, generated.GetWorkspaceMemberParams{
 		WorkspaceID: workspaceID,
@@ -192,6 +339,25 @@ func requirePolicyManager(ctx context.Context, queries *generated.Queries, works
 	default:
 		return ErrForbidden
 	}
+}
+
+func parsePolicyMutationIDs(workspaceIDValue string, policyIDValue string, userIDValue string) (pgtype.UUID, pgtype.UUID, pgtype.UUID, error) {
+	workspaceID, err := pgxutil.UUIDText(workspaceIDValue)
+	if err != nil {
+		return pgtype.UUID{}, pgtype.UUID{}, pgtype.UUID{}, identity.ErrInvalidWorkspaceID
+	}
+
+	policyID, err := pgxutil.UUIDText(policyIDValue)
+	if err != nil {
+		return pgtype.UUID{}, pgtype.UUID{}, pgtype.UUID{}, ErrInvalidRequest
+	}
+
+	userID, err := pgxutil.UUIDText(userIDValue)
+	if err != nil {
+		return pgtype.UUID{}, pgtype.UUID{}, pgtype.UUID{}, identity.ErrInvalidUserID
+	}
+
+	return workspaceID, policyID, userID, nil
 }
 
 func parseEffect(effect string) (generated.PolicyEffect, error) {

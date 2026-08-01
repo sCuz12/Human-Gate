@@ -45,6 +45,10 @@ export async function apiFetch<T>(
       throw new Error(payload?.error?.message ?? "Request failed.");
     }
 
+    if (response.status === 204) {
+      return undefined as T;
+    }
+
     return (await response.json()) as T;
   } catch (error) {
     if (error instanceof DOMException && error.name === "AbortError") {

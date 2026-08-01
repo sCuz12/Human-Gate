@@ -6,7 +6,6 @@ import { useRouter } from "next/navigation";
 import type { Session } from "@supabase/supabase-js";
 
 import { APIKeyGenerator } from "@/components/dashboard/api-key-generator";
-import { PolicyManager } from "@/components/dashboard/policy-manager";
 import { WorkspaceOnboarding } from "@/components/dashboard/workspace-onboarding";
 import type { APIKey } from "@/lib/api/api-keys";
 import { listWorkspaces, type Workspace } from "@/lib/api/workspaces";
@@ -170,7 +169,12 @@ export function DashboardClient() {
                             session={session}
                             workspace={workspace}
                           />
-                          <PolicyManager session={session} workspace={workspace} />
+                          <Link
+                            className="inline-flex rounded-md border border-black/10 bg-white px-3 py-2 text-sm font-semibold text-black/70 transition hover:border-[#1f6f78] hover:text-[#1f6f78]"
+                            href="/policies"
+                          >
+                            Manage policies
+                          </Link>
                         </div>
                       ) : null}
                     </div>
@@ -179,26 +183,6 @@ export function DashboardClient() {
               </div>
             )}
 
-            <div className="rounded-[2rem] border border-black/10 bg-white p-6 shadow-[0_20px_55px_rgba(0,0,0,0.08)]">
-              <p className="text-sm font-semibold uppercase tracking-[0.18em] text-[#b74b2a]">
-                Next implementation steps
-              </p>
-              <div className="mt-5 grid gap-4">
-                {[
-                  "Create API keys directly from the app",
-                  "Expose approval requests in the inbox",
-                  "Add policy creation and routing",
-                  "Connect the first workflow integration",
-                ].map((item) => (
-                  <div
-                    key={item}
-                    className="rounded-[1.5rem] border border-black/10 bg-[#fbf8f2] px-4 py-4 text-sm text-black/70"
-                  >
-                    {item}
-                  </div>
-                ))}
-              </div>
-            </div>
           </div>
 
           <aside className="space-y-6">
@@ -232,6 +216,12 @@ export function DashboardClient() {
                   href="/inbox"
                 >
                   Open inbox
+                </Link>
+                <Link
+                  className="rounded-2xl border border-black/10 px-4 py-3 text-sm font-medium text-black/75 transition hover:border-[#1f6f78] hover:text-[#1f6f78]"
+                  href="/policies"
+                >
+                  Manage policies
                 </Link>
                 <button
                   className="rounded-2xl bg-[#15110d] px-4 py-3 text-sm font-semibold text-white transition hover:bg-black"

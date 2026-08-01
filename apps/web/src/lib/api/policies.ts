@@ -70,3 +70,48 @@ export async function createPolicy(
     }),
   });
 }
+
+export async function updatePolicy(
+  session: Session,
+  input: {
+    workspaceID: string;
+    policyID: string;
+    name: string;
+    description?: string;
+    priority: number;
+    isActive: boolean;
+    conditions: PolicyCondition[];
+    effect: Policy["effect"];
+    deadlineSeconds: number;
+  },
+) {
+  return apiFetch<CreatePolicyResponse>(`/api/v1/policies/${input.policyID}`, session, {
+    method: "PATCH",
+    body: JSON.stringify({
+      workspace_id: input.workspaceID,
+      name: input.name,
+      description: input.description ?? "",
+      priority: input.priority,
+      is_active: input.isActive,
+      conditions: input.conditions,
+      effect: input.effect,
+      deadline_seconds: input.deadlineSeconds,
+    }),
+  });
+}
+
+export async function deletePolicy(
+  session: Session,
+  input: {
+    workspaceID: string;
+    policyID: string;
+  },
+) {
+  await apiFetch<void>(
+    `/api/v1/policies/${input.policyID}?workspace_id=${encodeURIComponent(input.workspaceID)}`,
+    session,
+    {
+      method: "DELETE",
+    },
+  );
+}

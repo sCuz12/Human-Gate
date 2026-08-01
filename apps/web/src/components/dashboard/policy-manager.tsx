@@ -5,7 +5,9 @@ import type { Session } from "@supabase/supabase-js";
 
 import {
   createPolicy,
+  deletePolicy,
   listPolicies,
+  updatePolicy,
   type Policy,
   type PolicyCondition,
 } from "@/lib/api/policies";
@@ -37,9 +39,11 @@ export function PolicyManager({ session, workspace }: PolicyManagerProps) {
   const [deadlineMinutes, setDeadlineMinutes] = useState(5);
   const [priority, setPriority] = useState(100);
   const [isActive, setIsActive] = useState(true);
+  const [editingPolicyID, setEditingPolicyID] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [deletingPolicyID, setDeletingPolicyID] = useState<string | null>(null);
 
   useEffect(() => {
     void loadPolicies();
@@ -83,7 +87,7 @@ export function PolicyManager({ session, workspace }: PolicyManagerProps) {
     setIsSubmitting(true);
 
     try {
-      const response = await createPolicy(session, {
+      const input = {
         workspaceID: workspace.id,
         name,
         priority,
@@ -91,22 +95,85 @@ export function PolicyManager({ session, workspace }: PolicyManagerProps) {
         conditions: previewConditions,
         effect,
         deadlineSeconds: effect === "require_approval" ? deadlineMinutes * 60 : 0,
+      };
+
+      const response = editingPolicyID
+        ? await updatePolicy(session, {
+            ...input,
+            policyID: editingPolicyID,
+          })
+        : await createPolicy(session, input);
+
+      setPolicies((current) => {
+        const next = editingPolicyID
+          ? current.map((policy) => (policy.id === response.policy.id ? response.policy : policy))
+          : [...current, response.policy];
+        return next.sort((a, b) => a.priority - b.priority);
       });
-      setPolicies((current) => [...current, response.policy].sort((a, b) => a.priority - b.priority));
+      resetForm();
       setError(null);
     } catch (submitError) {
-      setError(submitError instanceof Error ? submitError.message : "Policy could not be created.");
+      setError(submitError instanceof Error ? submitError.message : "Policy could not be saved.");
     } finally {
       setIsSubmitting(false);
+    }
+  }
+
+  function editPolicy(policy: Policy) {
+    setEditingPolicyID(policy.id);
+    setName(policy.name);
+    setActionType(stringConditionValue(policy, "action.type") ?? "");
+    setSourcePlatform(stringConditionValue(policy, "source.platform") ?? "");
+    setEffect(policy.effect);
+    setDeadlineMinutes(policy.deadline_seconds ? Math.max(1, Math.round(policy.deadline_seconds / 60)) : 5);
+    setPriority(policy.priority);
+    setIsActive(policy.is_active);
+    setError(null);
+  }
+
+  function resetForm() {
+    setEditingPolicyID(null);
+    setName("Refund approval");
+    setActionType("customer.refund");
+    setSourcePlatform("n8n");
+    setEffect("require_approval");
+    setDeadlineMinutes(5);
+    setPriority(100);
+    setIsActive(true);
+  }
+
+  async function removePolicy(policy: Policy) {
+    const confirmed = window.confirm(`Delete "${policy.name}"? Existing approval history will remain.`);
+    if (!confirmed) {
+      return;
+    }
+
+    setDeletingPolicyID(policy.id);
+    try {
+      await deletePolicy(session, {
+        workspaceID: workspace.id,
+        policyID: policy.id,
+      });
+      setPolicies((current) => current.filter((item) => item.id !== policy.id));
+      if (editingPolicyID === policy.id) {
+        resetForm();
+      }
+      setError(null);
+    } catch (deleteError) {
+      setError(deleteError instanceof Error ? deleteError.message : "Policy could not be deleted.");
+    } finally {
+      setDeletingPolicyID(null);
     }
   }
 
   return (
     <section className="mt-5 rounded-lg border border-black/10 bg-white p-4">
       <div className="flex flex-col gap-1">
-        <p className="text-sm font-semibold text-[#15110d]">Policies</p>
+        <p className="text-sm font-semibold text-[#15110d]">
+          {editingPolicyID ? "Edit policy" : "Create policy"}
+        </p>
         <p className="text-sm text-black/55">
-          Create simple MVP rules that route workflow actions and set approval deadlines.
+          Route workflow actions, decide the outcome, and set approval deadlines.
         </p>
       </div>
 
@@ -201,8 +268,17 @@ export function PolicyManager({ session, workspace }: PolicyManagerProps) {
           disabled={isSubmitting || previewConditions.length === 0}
           type="submit"
         >
-          {isSubmitting ? "Creating policy..." : "Create policy"}
+          {isSubmitting ? "Saving policy..." : editingPolicyID ? "Save changes" : "Create policy"}
         </button>
+        {editingPolicyID ? (
+          <button
+            className="rounded-md border border-black/10 px-4 py-3 text-sm font-semibold text-black/65 transition hover:border-[#1f6f78] hover:text-[#1f6f78]"
+            onClick={resetForm}
+            type="button"
+          >
+            Cancel editing
+          </button>
+        ) : null}
       </form>
 
       <div className="mt-5 border-t border-black/10 pt-4">
@@ -240,6 +316,23 @@ export function PolicyManager({ session, workspace }: PolicyManagerProps) {
                     </span>
                   ) : null}
                 </div>
+                <div className="mt-3 flex flex-wrap gap-2">
+                  <button
+                    className="rounded-md border border-black/10 bg-white px-3 py-2 text-xs font-semibold text-black/65 transition hover:border-[#1f6f78] hover:text-[#1f6f78]"
+                    onClick={() => editPolicy(policy)}
+                    type="button"
+                  >
+                    Edit
+                  </button>
+                  <button
+                    className="rounded-md border border-[#b74b2a]/30 bg-white px-3 py-2 text-xs font-semibold text-[#8d3419] transition hover:bg-[#fff2ec] disabled:cursor-not-allowed disabled:opacity-50"
+                    disabled={deletingPolicyID === policy.id}
+                    onClick={() => void removePolicy(policy)}
+                    type="button"
+                  >
+                    {deletingPolicyID === policy.id ? "Deleting..." : "Delete"}
+                  </button>
+                </div>
               </article>
             ))}
           </div>
@@ -247,4 +340,9 @@ export function PolicyManager({ session, workspace }: PolicyManagerProps) {
       </div>
     </section>
   );
+}
+
+function stringConditionValue(policy: Policy, field: PolicyCondition["field"]) {
+  const condition = policy.conditions.find((item) => item.field === field);
+  return typeof condition?.value === "string" ? condition.value : null;
 }

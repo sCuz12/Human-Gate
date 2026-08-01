@@ -27,7 +27,7 @@ insert into public.policies (
     $5,
     $6
 )
-returning id, workspace_id, name, description, priority, is_active, created_by, created_at, updated_at
+returning id, workspace_id, name, description, priority, is_active, created_by, created_at, updated_at, deleted_at
 `
 
 type CreatePolicyParams struct {
@@ -59,6 +59,7 @@ func (q *Queries) CreatePolicy(ctx context.Context, arg CreatePolicyParams) (Pol
 		&i.CreatedBy,
 		&i.CreatedAt,
 		&i.UpdatedAt,
+		&i.DeletedAt,
 	)
 	return i, err
 }
@@ -119,6 +120,38 @@ func (q *Queries) CreatePolicyVersion(ctx context.Context, arg CreatePolicyVersi
 	return i, err
 }
 
+const getLatestPolicyVersionForUpdate = `-- name: GetLatestPolicyVersionForUpdate :one
+select id, workspace_id, policy_id, version_number, conditions, effect, approval_settings, created_by, created_at
+from public.policy_versions
+where workspace_id = $1
+  and policy_id = $2
+order by version_number desc
+limit 1
+for update
+`
+
+type GetLatestPolicyVersionForUpdateParams struct {
+	WorkspaceID pgtype.UUID
+	PolicyID    pgtype.UUID
+}
+
+func (q *Queries) GetLatestPolicyVersionForUpdate(ctx context.Context, arg GetLatestPolicyVersionForUpdateParams) (PolicyVersion, error) {
+	row := q.db.QueryRow(ctx, getLatestPolicyVersionForUpdate, arg.WorkspaceID, arg.PolicyID)
+	var i PolicyVersion
+	err := row.Scan(
+		&i.ID,
+		&i.WorkspaceID,
+		&i.PolicyID,
+		&i.VersionNumber,
+		&i.Conditions,
+		&i.Effect,
+		&i.ApprovalSettings,
+		&i.CreatedBy,
+		&i.CreatedAt,
+	)
+	return i, err
+}
+
 const listActivePolicyVersionsForWorkspace = `-- name: ListActivePolicyVersionsForWorkspace :many
 select
     p.id as policy_id,
@@ -138,6 +171,7 @@ join public.policy_versions pv
  and pv.workspace_id = p.workspace_id
 where p.workspace_id = $1
   and p.is_active = true
+  and p.deleted_at is null
   and pv.version_number = (
       select max(pv2.version_number)
       from public.policy_versions pv2
@@ -214,6 +248,7 @@ join public.policy_versions pv
   on pv.policy_id = p.id
  and pv.workspace_id = p.workspace_id
 where p.workspace_id = $1
+  and p.deleted_at is null
   and pv.version_number = (
       select max(pv2.version_number)
       from public.policy_versions pv2
@@ -273,4 +308,88 @@ func (q *Queries) ListPolicySummariesForWorkspace(ctx context.Context, workspace
 		return nil, err
 	}
 	return items, nil
+}
+
+const softDeletePolicy = `-- name: SoftDeletePolicy :one
+update public.policies
+set is_active = false,
+    deleted_at = $1,
+    updated_at = $1
+where workspace_id = $2
+  and id = $3
+  and deleted_at is null
+returning id, workspace_id, name, description, priority, is_active, created_by, created_at, updated_at, deleted_at
+`
+
+type SoftDeletePolicyParams struct {
+	DeletedAt   pgtype.Timestamptz
+	WorkspaceID pgtype.UUID
+	ID          pgtype.UUID
+}
+
+func (q *Queries) SoftDeletePolicy(ctx context.Context, arg SoftDeletePolicyParams) (Policy, error) {
+	row := q.db.QueryRow(ctx, softDeletePolicy, arg.DeletedAt, arg.WorkspaceID, arg.ID)
+	var i Policy
+	err := row.Scan(
+		&i.ID,
+		&i.WorkspaceID,
+		&i.Name,
+		&i.Description,
+		&i.Priority,
+		&i.IsActive,
+		&i.CreatedBy,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+		&i.DeletedAt,
+	)
+	return i, err
+}
+
+const updatePolicy = `-- name: UpdatePolicy :one
+update public.policies
+set name = $1,
+    description = $2,
+    priority = $3,
+    is_active = $4,
+    updated_at = $5
+where workspace_id = $6
+  and id = $7
+  and deleted_at is null
+returning id, workspace_id, name, description, priority, is_active, created_by, created_at, updated_at, deleted_at
+`
+
+type UpdatePolicyParams struct {
+	Name        string
+	Description pgtype.Text
+	Priority    int32
+	IsActive    bool
+	UpdatedAt   pgtype.Timestamptz
+	WorkspaceID pgtype.UUID
+	ID          pgtype.UUID
+}
+
+func (q *Queries) UpdatePolicy(ctx context.Context, arg UpdatePolicyParams) (Policy, error) {
+	row := q.db.QueryRow(ctx, updatePolicy,
+		arg.Name,
+		arg.Description,
+		arg.Priority,
+		arg.IsActive,
+		arg.UpdatedAt,
+		arg.WorkspaceID,
+		arg.ID,
+	)
+	var i Policy
+	err := row.Scan(
+		&i.ID,
+		&i.WorkspaceID,
+		&i.Name,
+		&i.Description,
+		&i.Priority,
+		&i.IsActive,
+		&i.CreatedBy,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+		&i.DeletedAt,
+	)
+	return i, err
 }
