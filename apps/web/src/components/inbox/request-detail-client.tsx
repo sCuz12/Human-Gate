@@ -248,8 +248,7 @@ export function RequestDetailClient() {
                           <div>
                             <p className="text-sm font-semibold">{formatEventType(event.event_type)}</p>
                             <p className="mt-1 text-xs text-black/50">
-                              {event.actor_type}
-                              {event.actor_id ? ` · ${event.actor_id}` : ""}
+                              {formatActorLabel(event.actor_type, event.actor_id)}
                             </p>
                           </div>
                           <time className="text-xs text-black/45" dateTime={event.created_at}>
@@ -551,6 +550,14 @@ function formatClockTime(value: Date) {
     hour: "2-digit",
     minute: "2-digit",
   }).format(value);
+}
+
+function formatActorLabel(actorType: string, actorID: string | undefined) {
+  if (actorType === "api" || actorType === "api_key") {
+    return actorID ? `API key · *****${actorID.slice(-6)}` : "API key";
+  }
+
+  return actorID ? `${actorType} · ${actorID}` : actorType;
 }
 
 function formatMetadataValue(value: unknown) {
