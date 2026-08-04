@@ -9,11 +9,11 @@ COPY apps ./apps
 COPY db ./db
 COPY internal ./internal
 
-RUN CGO_ENABLED=0 GOOS=linux go build -trimpath -ldflags="-s -w" -o /out/humangate-api ./apps/api
+RUN CGO_ENABLED=0 GOOS=linux go build -trimpath -ldflags="-s -w" -o /out/greenpost-api ./apps/api
 
 FROM gcr.io/distroless/static-debian12:nonroot
 
-COPY --from=build /out/humangate-api /humangate-api
+COPY --from=build /out/greenpost-api /greenpost-api
 
 EXPOSE 8080
-ENTRYPOINT ["/humangate-api"]
+ENTRYPOINT ["/greenpost-api"]

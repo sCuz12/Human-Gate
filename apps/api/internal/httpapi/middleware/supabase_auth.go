@@ -4,9 +4,9 @@ import (
 	"net/http"
 	"strings"
 
-	"humangate/internal/identity"
-	"humangate/internal/identity/supabaseauth"
-	"humangate/internal/identity/userctx"
+	"greenpost/internal/identity"
+	"greenpost/internal/identity/supabaseauth"
+	"greenpost/internal/identity/userctx"
 )
 
 func SupabaseAuth(auth *supabaseauth.Service) func(http.Handler) http.Handler {

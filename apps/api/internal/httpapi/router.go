@@ -7,17 +7,17 @@ import (
 	"github.com/go-chi/chi/v5"
 
 	"github.com/jackc/pgx/v5/pgxpool"
-	"humangate/apps/api/internal/httpapi/apikeys"
-	"humangate/apps/api/internal/httpapi/approvals"
-	"humangate/apps/api/internal/httpapi/health"
-	"humangate/apps/api/internal/httpapi/middleware"
-	"humangate/apps/api/internal/httpapi/policies"
-	"humangate/apps/api/internal/httpapi/workspaces"
-	"humangate/internal/approval"
-	identityapikeys "humangate/internal/identity/apikeys"
-	"humangate/internal/identity/supabaseauth"
-	identityworkspaces "humangate/internal/identity/workspaces"
-	"humangate/internal/policy"
+	"greenpost/apps/api/internal/httpapi/apikeys"
+	"greenpost/apps/api/internal/httpapi/approvals"
+	"greenpost/apps/api/internal/httpapi/health"
+	"greenpost/apps/api/internal/httpapi/middleware"
+	"greenpost/apps/api/internal/httpapi/policies"
+	"greenpost/apps/api/internal/httpapi/workspaces"
+	"greenpost/internal/approval"
+	identityapikeys "greenpost/internal/identity/apikeys"
+	"greenpost/internal/identity/supabaseauth"
+	identityworkspaces "greenpost/internal/identity/workspaces"
+	"greenpost/internal/policy"
 )
 
 func NewRouter(logger *slog.Logger, db *pgxpool.Pool, supabaseAuth *supabaseauth.Service, allowedOrigins []string) http.Handler {

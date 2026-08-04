@@ -10,8 +10,8 @@ import (
 	"testing"
 	"time"
 
-	"humangate/db/generated"
-	"humangate/internal/platform/pgxutil"
+	"greenpost/db/generated"
+	"greenpost/internal/platform/pgxutil"
 
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgtype"
@@ -58,7 +58,7 @@ func TestSignedPayloadContainsDecisionIntegrityFields(t *testing.T) {
 	if payload["signature_algorithm"] != "HMAC-SHA256" {
 		t.Fatalf("signature algorithm mismatch: got %v", payload["signature_algorithm"])
 	}
-	if payload["signature_header"] != "X-HumanGate-Signature" {
+	if payload["signature_header"] != "X-Greenpost-Signature" {
 		t.Fatalf("signature header mismatch: got %v", payload["signature_header"])
 	}
 }
@@ -87,10 +87,10 @@ func TestDeliverPostsSignedDecisionPayload(t *testing.T) {
 		if r.Header.Get("Content-Type") != "application/json" {
 			t.Fatalf("content type mismatch: got %q", r.Header.Get("Content-Type"))
 		}
-		if r.Header.Get("X-HumanGate-Signature") == "" {
+		if r.Header.Get("X-Greenpost-Signature") == "" {
 			t.Fatal("missing signature header")
 		}
-		if r.Header.Get("X-HumanGate-Decision-ID") == "" {
+		if r.Header.Get("X-Greenpost-Decision-ID") == "" {
 			t.Fatal("missing decision id header")
 		}
 		w.WriteHeader(http.StatusNoContent)

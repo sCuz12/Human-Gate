@@ -105,7 +105,7 @@ export function DashboardClient() {
         <header className="flex flex-col gap-4 rounded-[2rem] border border-black/10 bg-[#16302b] px-6 py-6 text-[#f5ecde] shadow-[0_24px_60px_rgba(0,0,0,0.12)] md:flex-row md:items-end md:justify-between">
           <div className="space-y-3">
             <p className="text-sm font-semibold uppercase tracking-[0.24em] text-[#9bc5bb]">
-              HumanGate Dashboard
+              Greenpost Dashboard
             </p>
             <div>
               <h1 className="text-3xl font-semibold md:text-4xl">

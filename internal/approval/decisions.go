@@ -6,9 +6,9 @@ import (
 	"fmt"
 	"strings"
 
-	"humangate/db/generated"
-	"humangate/internal/identity"
-	"humangate/internal/platform/pgxutil"
+	"greenpost/db/generated"
+	"greenpost/internal/identity"
+	"greenpost/internal/platform/pgxutil"
 
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgtype"

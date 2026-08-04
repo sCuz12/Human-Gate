@@ -25,7 +25,7 @@ export function AuthCard({
       <section className="hidden bg-[#16302b] px-10 py-12 text-[#f4ead8] lg:flex lg:flex-col lg:justify-between">
         <div className="space-y-6">
           <p className="text-sm font-semibold uppercase tracking-[0.28em] text-[#c8e0d9]">
-            HumanGate
+            Greenpost
           </p>
           <h1 className="max-w-xl text-6xl font-semibold leading-[1.02]">
             Review consequential AI actions before they hit the business.

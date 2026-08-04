@@ -1,4 +1,4 @@
-module humangate
+module greenpost
 
 go 1.25.0
 

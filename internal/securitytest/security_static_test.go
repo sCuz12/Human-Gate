@@ -8,7 +8,7 @@ import (
 	"strings"
 	"testing"
 
-	"humangate/internal/approval"
+	"greenpost/internal/approval"
 )
 
 func TestTenantQueriesScopeWorkspaceOwnedResources(t *testing.T) {

@@ -8,10 +8,10 @@ import (
 	"syscall"
 	"time"
 
-	"humangate/internal/approval"
-	"humangate/internal/delivery"
-	"humangate/internal/platform/config"
-	"humangate/internal/platform/database"
+	"greenpost/internal/approval"
+	"greenpost/internal/delivery"
+	"greenpost/internal/platform/config"
+	"greenpost/internal/platform/database"
 )
 
 func main() {

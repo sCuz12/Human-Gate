@@ -1,5 +1,5 @@
 {
-  "name": "humangate",
+  "name": "greenpost",
   "private": true,
   "workspaces": [
     "apps/web",

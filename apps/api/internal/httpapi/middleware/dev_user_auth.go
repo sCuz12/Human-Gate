@@ -4,8 +4,8 @@ import (
 	"net/http"
 	"strings"
 
-	"humangate/internal/identity"
-	"humangate/internal/identity/userctx"
+	"greenpost/internal/identity"
+	"greenpost/internal/identity/userctx"
 
 	"github.com/google/uuid"
 )

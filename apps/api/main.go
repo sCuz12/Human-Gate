@@ -9,10 +9,10 @@ import (
 	"syscall"
 	"time"
 
-	"humangate/apps/api/internal/httpapi"
-	"humangate/internal/identity/supabaseauth"
-	"humangate/internal/platform/config"
-	"humangate/internal/platform/database"
+	"greenpost/apps/api/internal/httpapi"
+	"greenpost/internal/identity/supabaseauth"
+	"greenpost/internal/platform/config"
+	"greenpost/internal/platform/database"
 )
 
 func main() {

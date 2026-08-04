@@ -5,10 +5,10 @@ import (
 	"errors"
 	"net/http"
 
-	identitypkg "humangate/internal/identity"
-	"humangate/internal/identity/apikeys"
-	"humangate/internal/identity/userctx"
-	"humangate/internal/platform/pgxutil"
+	identitypkg "greenpost/internal/identity"
+	"greenpost/internal/identity/apikeys"
+	"greenpost/internal/identity/userctx"
+	"greenpost/internal/platform/pgxutil"
 )
 
 type Handler struct {

@@ -9,10 +9,10 @@ COPY apps ./apps
 COPY db ./db
 COPY internal ./internal
 
-RUN CGO_ENABLED=0 GOOS=linux go build -trimpath -ldflags="-s -w" -o /out/humangate-worker ./apps/worker
+RUN CGO_ENABLED=0 GOOS=linux go build -trimpath -ldflags="-s -w" -o /out/greenpost-worker ./apps/worker
 
 FROM gcr.io/distroless/static-debian12:nonroot
 
-COPY --from=build /out/humangate-worker /humangate-worker
+COPY --from=build /out/greenpost-worker /greenpost-worker
 
-ENTRYPOINT ["/humangate-worker"]
+ENTRYPOINT ["/greenpost-worker"]

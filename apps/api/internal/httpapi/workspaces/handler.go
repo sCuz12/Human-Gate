@@ -6,9 +6,9 @@ import (
 	"log/slog"
 	"net/http"
 
-	identitypkg "humangate/internal/identity"
-	"humangate/internal/identity/userctx"
-	identityworkspaces "humangate/internal/identity/workspaces"
+	identitypkg "greenpost/internal/identity"
+	"greenpost/internal/identity/userctx"
+	identityworkspaces "greenpost/internal/identity/workspaces"
 )
 
 type Handler struct {

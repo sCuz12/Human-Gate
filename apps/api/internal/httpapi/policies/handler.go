@@ -9,9 +9,9 @@ import (
 
 	"github.com/go-chi/chi/v5"
 
-	"humangate/internal/identity"
-	"humangate/internal/identity/userctx"
-	"humangate/internal/policy"
+	"greenpost/internal/identity"
+	"greenpost/internal/identity/userctx"
+	"greenpost/internal/policy"
 )
 
 type Handler struct {
