@@ -5,6 +5,8 @@ import (
 	"crypto/sha256"
 	"encoding/hex"
 	"encoding/json"
+	"net/http"
+	"net/http/httptest"
 	"testing"
 	"time"
 
@@ -71,6 +73,38 @@ func TestSignUsesHMACSHA256(t *testing.T) {
 
 	if got := sign(body, key); got != want {
 		t.Fatalf("signature mismatch\n got: %s\nwant: %s", got, want)
+	}
+}
+
+func TestDeliverPostsSignedDecisionPayload(t *testing.T) {
+	delivery := testDeliveryRow()
+	service := NewService(nil, nil, nil, Config{SigningKey: "test-signing-key"})
+
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodPost {
+			t.Fatalf("method mismatch: got %s, want %s", r.Method, http.MethodPost)
+		}
+		if r.Header.Get("Content-Type") != "application/json" {
+			t.Fatalf("content type mismatch: got %q", r.Header.Get("Content-Type"))
+		}
+		if r.Header.Get("X-HumanGate-Signature") == "" {
+			t.Fatal("missing signature header")
+		}
+		if r.Header.Get("X-HumanGate-Decision-ID") == "" {
+			t.Fatal("missing decision id header")
+		}
+		w.WriteHeader(http.StatusNoContent)
+	}))
+	defer server.Close()
+
+	delivery.Destination = pgtype.Text{String: server.URL, Valid: true}
+
+	statusCode, err := service.deliver(t.Context(), delivery)
+	if err != nil {
+		t.Fatalf("deliver: %v", err)
+	}
+	if statusCode != http.StatusNoContent {
+		t.Fatalf("status code mismatch: got %d, want %d", statusCode, http.StatusNoContent)
 	}
 }
 

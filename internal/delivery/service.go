@@ -185,7 +185,7 @@ func (s *Service) deliver(ctx context.Context, delivery generated.ListDueDecisio
 		return 0, err
 	}
 
-	request, err := http.NewRequestWithContext(ctx, http.MethodGet, delivery.Destination.String, bytes.NewReader(body))
+	request, err := http.NewRequestWithContext(ctx, http.MethodPost, delivery.Destination.String, bytes.NewReader(body))
 	if err != nil {
 		return 0, fmt.Errorf("build delivery request: %w", err)
 	}
