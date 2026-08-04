@@ -18,6 +18,8 @@ export function DashboardClient() {
   const [workspaces, setWorkspaces] = useState<Workspace[]>([]);
   const [workspaceError, setWorkspaceError] = useState<string | null>(null);
   const [generatedToken, setGeneratedToken] = useState<APIKey | null>(null);
+  const [signOutError, setSignOutError] = useState<string | null>(null);
+  const [isSigningOut, setIsSigningOut] = useState(false);
 
   useEffect(() => {
     const supabase = getSupabaseBrowserClient();
@@ -57,9 +59,21 @@ export function DashboardClient() {
   }, [router]);
 
   async function signOut() {
+    setSignOutError(null);
+    setIsSigningOut(true);
+
     const supabase = getSupabaseBrowserClient();
-    await supabase.auth.signOut();
-    router.replace("/login");
+    const { error } = await supabase.auth.signOut({ scope: "local" });
+
+    if (error) {
+      setIsSigningOut(false);
+      setSignOutError(error.message);
+      return;
+    }
+
+    setSession(null);
+    setWorkspaces([]);
+    router.push("/login");
     router.refresh();
   }
 
@@ -225,11 +239,17 @@ export function DashboardClient() {
                 </Link>
                 <button
                   className="rounded-2xl bg-[#15110d] px-4 py-3 text-sm font-semibold text-white transition hover:bg-black"
+                  disabled={isSigningOut}
                   onClick={signOut}
                   type="button"
                 >
-                  Sign out
+                  {isSigningOut ? "Signing out..." : "Sign out"}
                 </button>
+                {signOutError ? (
+                  <p className="rounded-2xl border border-[#b74b2a]/20 bg-[#fff2ec] px-4 py-3 text-sm text-[#8d3419]">
+                    {signOutError}
+                  </p>
+                ) : null}
               </div>
             </div>
           </aside>

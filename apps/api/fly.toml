@@ -1,0 +1,30 @@
+# fly.toml app configuration file generated for humangate-api on 2026-08-04T11:12:00+03:00
+#
+# See https://fly.io/docs/reference/configuration/ for information about how to use this file.
+#
+
+app = 'humangate-api'
+primary_region = 'fra'
+
+[build]
+  dockerfile = '../../Dockerfile.api'
+
+[http_service]
+  internal_port = 8080
+  force_https = true
+  auto_stop_machines = false
+  auto_start_machines = true
+  min_machines_running = 1
+  processes = ['app']
+
+  [[http_service.checks]]
+    interval = '15s'
+    timeout = '2s'
+    grace_period = '10s'
+    method = 'GET'
+    path = '/healthz'
+
+[[vm]]
+  memory = '1gb'
+  cpus = 1
+  memory_mb = 1024

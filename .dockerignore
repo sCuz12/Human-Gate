@@ -1,0 +1,11 @@
+.git
+.tmp
+node_modules
+apps/web/.next
+apps/web/node_modules
+packages/*/node_modules
+Dockerfile*
+fly.*.toml
+.env
+.env.*
+*.log
