@@ -6,9 +6,9 @@ import (
 	"log/slog"
 	"net/http"
 
-	identitypkg "greenpost/internal/identity"
-	"greenpost/internal/identity/userctx"
-	identityworkspaces "greenpost/internal/identity/workspaces"
+	identitypkg "decree/internal/identity"
+	"decree/internal/identity/userctx"
+	identityworkspaces "decree/internal/identity/workspaces"
 )
 
 type Handler struct {

@@ -8,7 +8,7 @@ import (
 	"strings"
 	"testing"
 
-	"greenpost/internal/approval"
+	"decree/internal/approval"
 )
 
 func TestTenantQueriesScopeWorkspaceOwnedResources(t *testing.T) {

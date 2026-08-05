@@ -26,7 +26,7 @@ a {
   box-sizing: border-box;
 }
 
-/* Greenpost landing: scroll reveal */
+/* Decree landing: scroll reveal */
 .gp-reveal {
   opacity: 0;
   transform: translateY(18px);
@@ -39,7 +39,7 @@ a {
   transform: translateY(0);
 }
 
-/* Greenpost landing: hero load-in sequence */
+/* Decree landing: hero load-in sequence */
 @keyframes gp-fade-up {
   from {
     opacity: 0;
@@ -56,7 +56,7 @@ a {
   animation: gp-fade-up 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
-/* Greenpost landing: manifest card entrance */
+/* Decree landing: manifest card entrance */
 @keyframes gp-card-in {
   from {
     opacity: 0;
@@ -73,7 +73,7 @@ a {
   animation: gp-card-in 0.9s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
-/* Greenpost landing: stamp impact */
+/* Decree landing: stamp impact */
 @keyframes gp-stamp-in {
   0% {
     opacity: 0;
@@ -97,7 +97,7 @@ a {
   animation: gp-stamp-in 0.55s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
 }
 
-/* Greenpost landing: signal lamp glow */
+/* Decree landing: signal lamp glow */
 @keyframes gp-lamp-pulse {
   0%,
   100% {
@@ -112,7 +112,7 @@ a {
   animation: gp-lamp-pulse 2.4s ease-out infinite;
 }
 
-/* Greenpost landing: resolved-line glow */
+/* Decree landing: resolved-line glow */
 @keyframes gp-glow-pulse {
   0%,
   100% {

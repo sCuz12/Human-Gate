@@ -63,7 +63,7 @@ const productSteps = [
   },
   {
     title: "Check the policy",
-    body: "Greenpost runs deterministic rules and returns allow, block, or approval required. Model confidence never becomes an authorization decision.",
+    body: "Decree runs deterministic rules and returns allow, block, or approval required. Model confidence never becomes an authorization decision.",
     icon: ShieldCheck,
   },
   {
@@ -112,7 +112,7 @@ export default function HomePage() {
                 <circle cx="12" cy="12" r="2.5" fill="#4fb583" />
               </svg>
               <span className="font-[family-name:var(--font-display)] text-xl font-semibold tracking-tight">
-                Greenpost
+                Decree
               </span>
             </Link>
             <nav aria-label="Primary navigation" className="flex items-center gap-2 text-sm font-semibold">
@@ -146,7 +146,7 @@ export default function HomePage() {
                 className="gp-hero-in mt-6 text-lg leading-8 text-white/80"
                 style={{ animationDelay: "160ms" }}
               >
-                Greenpost is the approval post for n8n, LangGraph, and custom
+                Decree is the approval post for n8n, LangGraph, and custom
                 agents. Safe actions continue. Risky ones wait for a person.
               </p>
               <div
@@ -180,12 +180,12 @@ export default function HomePage() {
                   <span className="h-2.5 w-2.5 rounded-full bg-[#176a44]/50" />
                 </div>
                 <Image
-                  alt="Greenpost approval inbox showing an AI workflow action awaiting review"
+                  alt="Decree approval inbox showing an AI workflow action awaiting review"
                   className="h-auto w-full"
                   height={992}
                   priority
                   sizes="(min-width: 1024px) 520px, 90vw"
-                  src="/images/greenpost-approval-inbox.png"
+                  src="/images/decree-approval-inbox.png"
                   width={1586}
                 />
               </div>
@@ -269,7 +269,7 @@ export default function HomePage() {
               A checkpoint for the moment before an agent acts.
             </h2>
             <p className="mt-5 text-base leading-7 text-black/65">
-              Greenpost doesn&apos;t issue refunds, delete records, publish
+              Decree doesn&apos;t issue refunds, delete records, publish
               content, or touch your CRM. It reviews the proposed action,
               records the decision, and hands that decision back to the
               workflow that asked.
@@ -314,7 +314,7 @@ export default function HomePage() {
             Keep automations moving without handing agents a blank check.
           </h2>
           <p className="mt-5 text-base leading-7 text-black/65">
-            Use Greenpost anywhere a workflow can propose a structured
+            Use Decree anywhere a workflow can propose a structured
             action: agent tools, HTTP nodes, durable graph interruptions,
             internal services, and webhooks.
           </p>
@@ -370,7 +370,7 @@ export default function HomePage() {
             </h2>
             <p className="mt-3 max-w-2xl text-sm leading-6 text-white/65">
               Create a workspace, generate an API key, and route your first
-              proposed action through Greenpost.
+              proposed action through Decree.
             </p>
           </div>
           <Link
@@ -385,7 +385,7 @@ export default function HomePage() {
       {/* ---------- FOOTER ---------- */}
       <footer className="border-t border-black/10 bg-[#f7f1e7] px-5 py-8 sm:px-8 lg:px-10">
         <div className="mx-auto flex max-w-7xl flex-col items-center justify-between gap-3 text-sm sm:flex-row">
-          <span className="text-black/45">© {new Date().getFullYear()} Greenpost</span>
+          <span className="text-black/45">© {new Date().getFullYear()} Decree</span>
           <div className="flex items-center gap-5 font-medium">
             <Link className="text-black/60 transition hover:text-[#1f6f78]" href="/login">
               Sign in

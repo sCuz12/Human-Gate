@@ -9,10 +9,10 @@ import (
 	"syscall"
 	"time"
 
-	"greenpost/apps/api/internal/httpapi"
-	"greenpost/internal/identity/supabaseauth"
-	"greenpost/internal/platform/config"
-	"greenpost/internal/platform/database"
+	"decree/apps/api/internal/httpapi"
+	"decree/internal/identity/supabaseauth"
+	"decree/internal/platform/config"
+	"decree/internal/platform/database"
 )
 
 func main() {

@@ -10,8 +10,8 @@ import (
 	"log/slog"
 	"time"
 
-	"greenpost/db/generated"
-	"greenpost/internal/platform/pgxutil"
+	"decree/db/generated"
+	"decree/internal/platform/pgxutil"
 
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"

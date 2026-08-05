@@ -14,8 +14,8 @@ import (
 	"strings"
 	"time"
 
-	"greenpost/db/generated"
-	"greenpost/internal/platform/pgxutil"
+	"decree/db/generated"
+	"decree/internal/platform/pgxutil"
 
 	"github.com/jackc/pgx/v5/pgtype"
 	"github.com/jackc/pgx/v5/pgxpool"
@@ -192,10 +192,10 @@ func (s *Service) deliver(ctx context.Context, delivery generated.ListDueDecisio
 
 	signature := sign(body, s.signingKey)
 	request.Header.Set("Content-Type", "application/json")
-	request.Header.Set("User-Agent", "Greenpost-Worker/0.1")
-	request.Header.Set("X-Greenpost-Signature", "sha256="+signature)
-	request.Header.Set("X-Greenpost-Decision-ID", pgxutil.UUIDString(delivery.DecisionID))
-	request.Header.Set("X-Greenpost-Delivery-ID", pgxutil.UUIDString(delivery.DeliveryID))
+	request.Header.Set("User-Agent", "Decree-Worker/0.1")
+	request.Header.Set("X-Decree-Signature", "sha256="+signature)
+	request.Header.Set("X-Decree-Decision-ID", pgxutil.UUIDString(delivery.DecisionID))
+	request.Header.Set("X-Decree-Delivery-ID", pgxutil.UUIDString(delivery.DeliveryID))
 
 	response, err := s.httpClient.Do(request)
 	if err != nil {
@@ -227,7 +227,7 @@ func (s *Service) signedPayload(delivery generated.ListDueDecisionDeliveriesRow)
 		"continuation_strategy": delivery.Strategy,
 		"issued_at":             delivery.IssuedAt.Time.UTC().Format(time.RFC3339Nano),
 		"signature_algorithm":   "HMAC-SHA256",
-		"signature_header":      "X-Greenpost-Signature",
+		"signature_header":      "X-Decree-Signature",
 	}
 
 	body, err := json.Marshal(payload)

@@ -1,4 +1,4 @@
-project_id = "greenpost"
+project_id = "decree"
 
 [api]
 enabled = true

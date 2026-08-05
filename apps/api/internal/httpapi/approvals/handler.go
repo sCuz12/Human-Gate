@@ -8,10 +8,10 @@ import (
 	"strconv"
 	"strings"
 
-	"greenpost/internal/approval"
-	"greenpost/internal/identity/apikeys"
-	"greenpost/internal/identity/userctx"
-	"greenpost/internal/platform/pgxutil"
+	"decree/internal/approval"
+	"decree/internal/identity/apikeys"
+	"decree/internal/identity/userctx"
+	"decree/internal/platform/pgxutil"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/jackc/pgx/v5"

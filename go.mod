@@ -1,4 +1,4 @@
-module greenpost
+module decree
 
 go 1.25.0
 

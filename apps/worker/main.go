@@ -8,10 +8,10 @@ import (
 	"syscall"
 	"time"
 
-	"greenpost/internal/approval"
-	"greenpost/internal/delivery"
-	"greenpost/internal/platform/config"
-	"greenpost/internal/platform/database"
+	"decree/internal/approval"
+	"decree/internal/delivery"
+	"decree/internal/platform/config"
+	"decree/internal/platform/database"
 )
 
 func main() {

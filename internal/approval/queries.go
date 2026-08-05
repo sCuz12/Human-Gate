@@ -8,9 +8,9 @@ import (
 	"fmt"
 	"strings"
 
-	"greenpost/db/generated"
-	"greenpost/internal/identity"
-	"greenpost/internal/platform/pgxutil"
+	"decree/db/generated"
+	"decree/internal/identity"
+	"decree/internal/platform/pgxutil"
 
 	"github.com/jackc/pgx/v5"
 )
