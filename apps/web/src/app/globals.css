@@ -25,3 +25,121 @@ a {
 * {
   box-sizing: border-box;
 }
+
+/* Greenpost landing: scroll reveal */
+.gp-reveal {
+  opacity: 0;
+  transform: translateY(18px);
+  transition: opacity 0.7s cubic-bezier(0.16, 1, 0.3, 1), transform 0.7s cubic-bezier(0.16, 1, 0.3, 1);
+  will-change: opacity, transform;
+}
+
+.gp-reveal-in {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* Greenpost landing: hero load-in sequence */
+@keyframes gp-fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.gp-hero-in {
+  opacity: 0;
+  animation: gp-fade-up 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+/* Greenpost landing: manifest card entrance */
+@keyframes gp-card-in {
+  from {
+    opacity: 0;
+    transform: translateY(24px) scale(0.97);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.gp-manifest-in {
+  opacity: 0;
+  animation: gp-card-in 0.9s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+/* Greenpost landing: stamp impact */
+@keyframes gp-stamp-in {
+  0% {
+    opacity: 0;
+    transform: translate(-50%, -50%) rotate(-16deg) scale(1.9);
+  }
+  60% {
+    opacity: 1;
+    transform: translate(-50%, -50%) rotate(-11deg) scale(0.92);
+  }
+  80% {
+    transform: translate(-50%, -50%) rotate(-12deg) scale(1.04);
+  }
+  100% {
+    opacity: 1;
+    transform: translate(-50%, -50%) rotate(-11deg) scale(1);
+  }
+}
+
+.gp-stamp-in {
+  opacity: 0;
+  animation: gp-stamp-in 0.55s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+
+/* Greenpost landing: signal lamp glow */
+@keyframes gp-lamp-pulse {
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 rgba(23, 106, 68, 0.55);
+  }
+  50% {
+    box-shadow: 0 0 0 6px rgba(23, 106, 68, 0);
+  }
+}
+
+.gp-lamp-go {
+  animation: gp-lamp-pulse 2.4s ease-out infinite;
+}
+
+/* Greenpost landing: resolved-line glow */
+@keyframes gp-glow-pulse {
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 rgba(23, 106, 68, 0.35);
+  }
+  50% {
+    box-shadow: 0 0 0 10px rgba(23, 106, 68, 0);
+  }
+}
+
+.gp-glow-pulse {
+  animation: gp-glow-pulse 2.6s ease-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .gp-reveal,
+  .gp-hero-in,
+  .gp-manifest-in,
+  .gp-stamp-in {
+    animation: none !important;
+    transition: none !important;
+    opacity: 1 !important;
+    transform: none !important;
+  }
+
+  .gp-lamp-go,
+  .gp-glow-pulse {
+    animation: none !important;
+  }
+}
