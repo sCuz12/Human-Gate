@@ -1,18 +1,17 @@
-import { Fragment } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { IBM_Plex_Mono, IBM_Plex_Sans, Space_Grotesk } from "next/font/google";
 import {
-  CaretRight,
+  ArrowRight,
+  BracketsCurly,
+  CheckCircle,
   Code,
-  FlowArrow,
   GitBranch,
+  LockKey,
   PaperPlaneTilt,
   Plugs,
-  SealCheck,
   ShieldCheck,
   Tray,
-  TrayArrowDown,
 } from "@phosphor-icons/react/ssr";
 import { ScrollReveal } from "@/components/landing/scroll-reveal";
 
@@ -37,93 +36,106 @@ const mono = IBM_Plex_Mono({
   display: "swap",
 });
 
-const audiencePoints = [
+const proofLogos = [
+  { label: "n8n", logo: "https://cdn.simpleicons.org/n8n/123d2b" },
+  { label: "Go", logo: "https://cdn.simpleicons.org/go/123d2b" },
+  { label: "Python", logo: "https://cdn.simpleicons.org/python/123d2b" },
+  { label: "Slack", logo: "https://cdn.simpleicons.org/slack/123d2b" },
+  { label: "Supabase", logo: "https://cdn.simpleicons.org/supabase/123d2b" },
+];
+
+const reviewCards = [
   {
-    tag: "Workflow builders",
-    body: "Add a human checkpoint before refunds, deletions, customer messages, supplier changes, or publishing.",
-    icon: FlowArrow,
+    title: "Refund over policy limit",
+    meta: "customer.refund",
+    detail: "$249 proposed by an agent after a support conversation.",
+    verdict: "Human review",
   },
   {
-    tag: "Operations",
-    body: "Work every approval from one inbox instead of scattered Slack threads, email chains, and one-off webhook forms.",
-    icon: Tray,
+    title: "Supplier bank change",
+    meta: "vendor.update",
+    detail: "Irreversible account detail change before payment run.",
+    verdict: "Blocked",
   },
   {
-    tag: "Engineering",
-    body: "Get idempotent requests, signed callbacks, audit events, and approvals scoped to the right workspace.",
-    icon: Code,
+    title: "Knowledge base edit",
+    meta: "content.publish",
+    detail: "Low-risk article update with matching policy snapshot.",
+    verdict: "Allowed",
   },
 ];
 
-const productSteps = [
+const bentoItems = [
   {
-    title: "Send the proposed action",
-    body: "n8n, LangGraph, custom agents, and backend services submit the action they want to take before it touches a business system.",
-    icon: PaperPlaneTilt,
-  },
-  {
-    title: "Check the policy",
-    body: "Decree runs deterministic rules and returns allow, block, or approval required. Model confidence never becomes an authorization decision.",
+    title: "Policies decide first",
+    body: "Deterministic rules return allow, block, or approval required before the workflow touches a business system.",
     icon: ShieldCheck,
+    className: "md:col-span-2 md:row-span-2",
   },
   {
-    title: "Resolve it in one inbox",
-    body: "An approver reviews the action, evidence, risk, and deadline, then approves, edits and approves, or rejects it.",
-    icon: TrayArrowDown,
+    title: "One inbox",
+    body: "Approvers see action details, evidence, source workflow, deadline, and history in one place.",
+    icon: Tray,
+    className: "",
   },
   {
-    title: "Get a signed decision back",
-    body: "The workflow receives a signed decision and stays responsible for the actual execution, retries, and credentials.",
-    icon: SealCheck,
+    title: "Signed callbacks",
+    body: "Every resolved decision carries stable identifiers and hashes for replay-resistant continuation.",
+    icon: LockKey,
+    className: "",
+  },
+  {
+    title: "Agent-native",
+    body: "Submit from n8n, LangGraph interrupts, backend services, Python agents, or a generic webhook.",
+    icon: GitBranch,
+    className: "md:col-span-2",
   },
 ];
 
-const integrations = [
-  { label: "n8n", logo: "https://cdn.simpleicons.org/n8n/13505a" },
-  { label: "LangGraph", icon: GitBranch },
-  { label: "Go services", logo: "https://cdn.simpleicons.org/go/13505a" },
-  { label: "Python agents", logo: "https://cdn.simpleicons.org/python/13505a" },
-  { label: "Generic webhooks", icon: Plugs },
+const flowSteps = [
+  { title: "Propose", body: "Send the action and continuation target.", icon: PaperPlaneTilt },
+  { title: "Evaluate", body: "Match active policy versions by priority.", icon: BracketsCurly },
+  { title: "Review", body: "Approve, edit and approve, reject, or expire.", icon: CheckCircle },
+  { title: "Resume", body: "Return a signed decision to the source workflow.", icon: ArrowRight },
 ];
-
-const gateLines = [
-  { text: "Agent proposes: refund customer $249", tone: "default" },
-  { text: "Policy matches: refunds over $50 require approval", tone: "hold" },
-  { text: "Approver reviews evidence, edits if needed, and signs off", tone: "default" },
-  { text: "Workflow receives its signed decision and resumes", tone: "go" },
-] as const;
 
 export default function HomePage() {
-  const LeadAudienceIcon = audiencePoints[0].icon;
-
   return (
     <main
-      className={`${display.variable} ${body.variable} ${mono.variable} min-h-screen bg-[#f7f1e7] font-[family-name:var(--font-body)] text-[#15110d]`}
+      className={`${display.variable} ${body.variable} ${mono.variable} min-h-[100dvh] overflow-hidden bg-[#f6f8f3] font-[family-name:var(--font-body)] text-[#123d2b]`}
     >
-      {/* ---------- HERO (asymmetric split, real screenshot as the visual) ---------- */}
-      <section className="relative overflow-hidden bg-[#16302b] text-white">
-        <div className="pointer-events-none absolute inset-0 [background:radial-gradient(60%_50%_at_85%_0%,rgba(23,106,68,0.32),transparent_60%)]" />
+      <section className="relative min-h-[100dvh] overflow-hidden bg-[#f6f8f3]">
+        <Image
+          alt="Abstract glass approval architecture with green illuminated decision panels"
+          className="absolute inset-y-0 right-0 h-full w-full object-cover opacity-28 mix-blend-multiply lg:left-[34%] lg:w-[82%]"
+          fill
+          priority
+          sizes="100vw"
+          src="/images/decree-glass-gate.png"
+        />
+        <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(246,248,243,0.98)_0%,rgba(246,248,243,0.9)_43%,rgba(246,248,243,0.54)_100%)]" />
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_16%_76%,rgba(52,211,133,0.18),transparent_32%),radial-gradient(circle_at_86%_12%,rgba(195,213,201,0.45),transparent_28%)]" />
+        <div className="gp-noise" />
 
-        <div className="relative z-10 mx-auto max-w-7xl px-5 py-5 sm:px-8 lg:px-10">
-          <header className="gp-hero-in flex items-center justify-between gap-4 rounded-lg border border-white/[0.12] bg-[#16302b]/80 px-3 py-3 backdrop-blur-md sm:px-4">
-            <Link className="flex items-center gap-2" href="/">
-              <svg aria-hidden="true" className="h-6 w-6 text-white/80" fill="none" viewBox="0 0 24 24">
-                <circle cx="12" cy="12" r="9" stroke="currentColor" strokeDasharray="2.4 3.2" strokeWidth="1.5" />
-                <circle cx="12" cy="12" r="2.5" fill="#4fb583" />
-              </svg>
+        <div className="relative mx-auto flex min-h-[100dvh] max-w-7xl flex-col px-5 py-5 sm:px-8 lg:px-10">
+          <header className="gp-hero-in flex h-16 items-center justify-between gap-4 rounded-2xl border border-[#123d2b]/10 bg-white/58 px-4 shadow-[0_18px_70px_rgba(18,61,43,0.1)] backdrop-blur-xl">
+            <Link className="flex items-center gap-3" href="/">
+              <span className="flex h-9 w-9 items-center justify-center rounded-xl border border-[#1f8f5f]/20 bg-[#dff7e8] text-[#123d2b]">
+                <ShieldCheck size={19} weight="bold" />
+              </span>
               <span className="font-[family-name:var(--font-display)] text-xl font-semibold tracking-tight">
                 Decree
               </span>
             </Link>
             <nav aria-label="Primary navigation" className="flex items-center gap-2 text-sm font-semibold">
               <Link
-                className="inline-flex min-h-11 items-center rounded-md border border-white/20 px-4 text-white transition hover:border-white/45 hover:bg-white/10"
+                className="inline-flex min-h-11 items-center rounded-xl px-4 text-[#123d2b]/68 transition hover:bg-[#123d2b]/8 hover:text-[#123d2b] active:translate-y-px"
                 href="/login"
               >
                 Sign in
               </Link>
               <Link
-                className="inline-flex min-h-11 items-center rounded-md bg-[#176a44] px-4 text-white transition hover:bg-[#0f5636]"
+                className="inline-flex min-h-11 items-center rounded-xl bg-[#123d2b] px-4 text-white shadow-[0_12px_35px_rgba(18,61,43,0.18)] transition hover:bg-[#19513a] active:translate-y-px"
                 href="/register"
               >
                 Get started
@@ -131,36 +143,36 @@ export default function HomePage() {
             </nav>
           </header>
 
-          <div className="grid gap-14 py-14 lg:grid-cols-[1fr_1fr] lg:items-center lg:py-20">
-            <div className="max-w-lg">
-              <p className="gp-hero-in inline-flex rounded-md border border-[#b74b2a]/40 bg-[#b74b2a]/15 px-3 py-2 text-sm font-semibold text-[#f3c3a8]">
-                For people building AI workflows
+          <div className="grid flex-1 items-center gap-10 py-12 lg:grid-cols-[minmax(0,0.92fr)_minmax(360px,0.58fr)] lg:py-10">
+            <div className="max-w-4xl">
+              <p className="gp-hero-in max-w-fit rounded-full border border-[#1f8f5f]/20 bg-white/62 px-4 py-2 font-[family-name:var(--font-mono)] text-xs font-medium text-[#1b7652] shadow-[0_10px_30px_rgba(18,61,43,0.08)] backdrop-blur-xl">
+                Human approval for agentic workflows
               </p>
               <h1
-                className="gp-hero-in mt-6 font-[family-name:var(--font-display)] text-4xl font-semibold leading-[1.1] sm:text-5xl lg:text-6xl"
+                className="gp-hero-in mt-7 max-w-4xl font-[family-name:var(--font-display)] text-5xl font-semibold leading-[0.96] tracking-tight text-[#123d2b] sm:text-6xl lg:text-7xl"
                 style={{ animationDelay: "80ms" }}
               >
-                Give AI agents a checkpoint, not a blank check.
+                Turn agent actions into reviewed decisions.
               </h1>
               <p
-                className="gp-hero-in mt-6 text-lg leading-8 text-white/80"
+                className="gp-hero-in mt-7 max-w-xl text-lg leading-8 text-[#365846]"
                 style={{ animationDelay: "160ms" }}
               >
-                Decree is the approval post for n8n, LangGraph, and custom
-                agents. Safe actions continue. Risky ones wait for a person.
+                Decree routes proposed actions through policy, people, audit, and signed continuation.
               </p>
               <div
                 className="gp-hero-in mt-9 flex flex-col gap-3 sm:flex-row"
                 style={{ animationDelay: "240ms" }}
               >
                 <Link
-                  className="inline-flex min-h-14 items-center justify-center rounded-md bg-[#176a44] px-6 text-base font-semibold text-white transition hover:bg-[#0f5636] active:translate-y-px"
+                  className="inline-flex min-h-14 items-center justify-center gap-2 rounded-xl bg-[#123d2b] px-6 text-base font-semibold text-white shadow-[0_18px_45px_rgba(18,61,43,0.18)] transition hover:bg-[#19513a] active:translate-y-px"
                   href="/register"
                 >
                   Get started
+                  <ArrowRight size={18} weight="bold" />
                 </Link>
                 <Link
-                  className="inline-flex min-h-14 items-center justify-center rounded-md border border-white/35 bg-white/10 px-6 text-base font-semibold text-white backdrop-blur-sm transition hover:border-white/70 hover:bg-white/[0.16] active:translate-y-px"
+                  className="inline-flex min-h-14 items-center justify-center rounded-xl border border-[#123d2b]/15 bg-white/62 px-6 text-base font-semibold text-[#123d2b] shadow-[0_14px_35px_rgba(18,61,43,0.08)] backdrop-blur-md transition hover:border-[#123d2b]/32 hover:bg-white active:translate-y-px"
                   href="/login"
                 >
                   Sign in
@@ -168,229 +180,197 @@ export default function HomePage() {
               </div>
             </div>
 
-            {/* Signature element: a real screenshot, stamped cleared */}
-            <div className="relative mx-auto w-full max-w-lg lg:mx-0">
-              <div
-                className="gp-manifest-in overflow-hidden rounded-xl border border-black/10 bg-white shadow-[0_30px_80px_rgba(0,0,0,0.4)]"
-                style={{ animationDelay: "260ms" }}
-              >
-                <div className="flex items-center gap-1.5 border-b border-black/10 bg-[#f4f5f0] px-4 py-3">
-                  <span className="h-2.5 w-2.5 rounded-full bg-[#b74b2a]/50" />
-                  <span className="h-2.5 w-2.5 rounded-full bg-[#b68422]/50" />
-                  <span className="h-2.5 w-2.5 rounded-full bg-[#176a44]/50" />
-                </div>
-                <Image
-                  alt="Decree approval inbox showing an AI workflow action awaiting review"
-                  className="h-auto w-full"
-                  height={992}
-                  priority
-                  sizes="(min-width: 1024px) 520px, 90vw"
-                  src="/images/decree-approval-inbox.png"
-                  width={1586}
-                />
-              </div>
-
-              <div
-                className="gp-stamp-in pointer-events-none absolute left-[86%] top-[2%] flex h-24 w-24 items-center justify-center rounded-full border-[3px] border-[#176a44] bg-[#faf6ee] text-[#176a44] shadow-[0_10px_30px_rgba(0,0,0,0.25)]"
-                style={{ animationDelay: "820ms" }}
-              >
-                <div className="flex flex-col items-center leading-none">
-                  <span className="font-[family-name:var(--font-mono)] text-[8px] tracking-[0.2em]">
-                    GREENPOST
-                  </span>
-                  <span className="mt-1 font-[family-name:var(--font-display)] text-sm font-semibold tracking-wide">
-                    CLEARED
-                  </span>
-                  <span className="mt-1 font-[family-name:var(--font-mono)] text-[8px] tracking-[0.2em]">
-                    SIGNED
+            <div className="gp-card-in hidden rounded-[2rem] border border-white/70 bg-white/64 p-3 shadow-[0_30px_100px_rgba(18,61,43,0.16)] backdrop-blur-xl lg:block">
+              <div className="rounded-[1.5rem] border border-[#123d2b]/10 bg-[#fafffb]/82 p-4">
+                <div className="flex items-center justify-between border-b border-[#123d2b]/10 pb-4">
+                  <div>
+                    <p className="font-[family-name:var(--font-display)] text-lg font-semibold">Live review queue</p>
+                    <p className="mt-1 text-sm text-[#365846]/70">Policy has already sorted what needs a person.</p>
+                  </div>
+                  <span className="rounded-full bg-[#dff7e8] px-3 py-1 text-sm font-semibold text-[#1b7652]">
+                    3 pending
                   </span>
                 </div>
-              </div>
-
-              <div
-                className="gp-hero-in mt-5 flex items-center gap-5 text-xs text-white/55"
-                style={{ animationDelay: "1000ms" }}
-              >
-                <span className="flex items-center gap-1.5">
-                  <span className="h-1.5 w-1.5 rounded-full bg-white/25" />
-                  Block
-                </span>
-                <span className="flex items-center gap-1.5">
-                  <span className="h-1.5 w-1.5 rounded-full bg-[#b68422]/70" />
-                  Hold
-                </span>
-                <span className="flex items-center gap-1.5 text-[#7fd1a6]">
-                  <span className="gp-lamp-go h-1.5 w-1.5 rounded-full bg-[#4fb583]" />
-                  Go
-                </span>
+                <div className="mt-4 space-y-3">
+                  {reviewCards.map((card, index) => (
+                    <article
+                      className="gp-float-panel rounded-2xl border border-[#123d2b]/10 bg-white/80 p-4 shadow-[0_18px_50px_rgba(18,61,43,0.08)]"
+                      key={card.title}
+                      style={{ animationDelay: `${index * 180}ms` }}
+                    >
+                      <div className="flex items-start justify-between gap-4">
+                        <div>
+                          <p className="font-[family-name:var(--font-mono)] text-xs text-[#1b7652]">{card.meta}</p>
+                          <h2 className="mt-2 font-[family-name:var(--font-display)] text-lg font-semibold">
+                            {card.title}
+                          </h2>
+                        </div>
+                        <span className="shrink-0 rounded-full border border-[#1f8f5f]/18 bg-[#f2fff7] px-3 py-1 text-xs font-semibold text-[#1b7652]">
+                          {card.verdict}
+                        </span>
+                      </div>
+                      <p className="mt-3 text-sm leading-6 text-[#365846]/74">{card.detail}</p>
+                    </article>
+                  ))}
+                </div>
               </div>
             </div>
           </div>
         </div>
       </section>
 
-      {/* ---------- AUDIENCE (1 lead card + 2, not three equal columns) ---------- */}
-      <section className="mx-auto max-w-7xl px-5 py-16 sm:px-8 lg:px-10">
-        <div className="grid gap-4 md:grid-cols-2">
-          <ScrollReveal className="md:col-span-2">
-            <article className="rounded-lg border border-black/[0.08] bg-white p-6 shadow-[0_18px_45px_rgba(13,24,16,0.06)] transition duration-300 hover:-translate-y-1 hover:shadow-[0_24px_55px_rgba(13,24,16,0.1)] md:flex md:items-center md:gap-10">
-              <div className="flex items-center gap-3 md:w-56 md:shrink-0">
-                <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md bg-[#1f6f78]/10 text-[#1f6f78]">
-                  <LeadAudienceIcon size={18} weight="bold" />
-                </span>
-                <p className="text-base font-semibold text-[#1f6f78]">
-                  {audiencePoints[0].tag}
-                </p>
-              </div>
-              <p className="mt-3 text-sm leading-6 text-black/70 md:mt-0 md:max-w-lg">
-                {audiencePoints[0].body}
-              </p>
-            </article>
-          </ScrollReveal>
-          {audiencePoints.slice(1).map((point, index) => (
-            <ScrollReveal delayMs={(index + 1) * 100} key={point.tag}>
-              <article className="h-full rounded-lg border border-black/[0.08] bg-white p-5 shadow-[0_18px_45px_rgba(13,24,16,0.06)] transition duration-300 hover:-translate-y-1 hover:shadow-[0_24px_55px_rgba(13,24,16,0.1)]">
-                <span className="flex h-9 w-9 items-center justify-center rounded-md bg-[#1f6f78]/10 text-[#1f6f78]">
-                  <point.icon size={18} weight="bold" />
-                </span>
-                <p className="mt-3 text-sm font-semibold text-[#1f6f78]">{point.tag}</p>
-                <p className="mt-3 text-sm leading-6 text-black/70">{point.body}</p>
-              </article>
-            </ScrollReveal>
+      <section className="border-y border-[#123d2b]/10 bg-white/54">
+        <div className="mx-auto flex max-w-7xl flex-wrap items-center justify-center gap-x-10 gap-y-6 px-5 py-7 sm:px-8 lg:px-10">
+          {proofLogos.map((item) => (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
+              alt={item.label}
+              className="h-7 w-auto opacity-55 grayscale transition hover:opacity-100 hover:grayscale-0"
+              height={28}
+              key={item.label}
+              src={item.logo}
+              width={112}
+            />
           ))}
         </div>
       </section>
 
-      {/* ---------- WHAT IT DOES (stacked header, full-width process grid) ---------- */}
-      <section className="bg-[#efe7dc]">
-        <div className="mx-auto max-w-7xl px-5 py-16 sm:px-8 lg:px-10">
-          <ScrollReveal className="max-w-2xl">
-            <h2 className="font-[family-name:var(--font-display)] text-3xl font-semibold sm:text-4xl">
-              A checkpoint for the moment before an agent acts.
+      <section className="relative bg-[#f6f8f3] px-5 py-20 sm:px-8 lg:px-10">
+        <div className="mx-auto max-w-7xl">
+          <ScrollReveal className="max-w-3xl">
+            <h2 className="font-[family-name:var(--font-display)] text-4xl font-semibold leading-tight tracking-tight text-[#123d2b] sm:text-5xl">
+              Built for the moment before a workflow acts.
             </h2>
-            <p className="mt-5 text-base leading-7 text-black/65">
-              Decree doesn&apos;t issue refunds, delete records, publish
-              content, or touch your CRM. It reviews the proposed action,
-              records the decision, and hands that decision back to the
-              workflow that asked.
+            <p className="mt-5 max-w-2xl text-base leading-7 text-[#365846]">
+              The platform never performs the final business action. It decides whether the source workflow may continue.
             </p>
           </ScrollReveal>
 
-          <div className="mt-10 grid items-center gap-3 sm:grid-cols-2 lg:grid-cols-[1fr_auto_1fr_auto_1fr_auto_1fr]">
-            {productSteps.map((step, index) => (
-              <Fragment key={step.title}>
-                <ScrollReveal delayMs={index * 90}>
-                  <article className="h-full rounded-lg border border-black/[0.08] bg-white p-5 transition duration-300 hover:-translate-y-1 hover:shadow-[0_18px_40px_rgba(13,24,16,0.08)]">
-                    <div className="flex items-center justify-between">
-                      <p className="font-[family-name:var(--font-mono)] text-sm font-semibold text-[#176a44]">
-                        0{index + 1}
-                      </p>
-                      <span className="flex h-8 w-8 items-center justify-center rounded-md bg-[#176a44]/10 text-[#176a44]">
-                        <step.icon size={16} weight="bold" />
-                      </span>
+          <div className="mt-12 grid auto-rows-[minmax(220px,auto)] gap-4 md:grid-cols-4">
+            {bentoItems.map((item, index) => (
+              <ScrollReveal className={item.className} delayMs={index * 90} key={item.title}>
+                <article className="group relative flex h-full min-h-[220px] overflow-hidden rounded-[1.5rem] border border-[#123d2b]/10 bg-white p-6 shadow-[0_24px_80px_rgba(18,61,43,0.08)]">
+                  <div className="absolute inset-0 opacity-0 transition duration-500 group-hover:opacity-100 [background:radial-gradient(circle_at_70%_20%,rgba(52,211,133,0.16),transparent_34%)]" />
+                  <div className="relative flex h-full flex-col justify-between">
+                    <span className="flex h-11 w-11 items-center justify-center rounded-2xl border border-[#1f8f5f]/16 bg-[#dff7e8] text-[#123d2b]">
+                      <item.icon size={22} weight="bold" />
+                    </span>
+                    <div className="mt-10">
+                      <h3 className="font-[family-name:var(--font-display)] text-2xl font-semibold tracking-tight">
+                        {item.title}
+                      </h3>
+                      <p className="mt-3 max-w-lg text-sm leading-6 text-[#365846]/76">{item.body}</p>
                     </div>
-                    <h3 className="mt-4 text-lg font-semibold">{step.title}</h3>
-                    <p className="mt-3 text-sm leading-6 text-black/65">{step.body}</p>
-                  </article>
-                </ScrollReveal>
-                {index < productSteps.length - 1 ? (
-                  <CaretRight
-                    aria-hidden="true"
-                    className="mx-auto hidden shrink-0 text-black/20 lg:block"
-                    size={18}
-                    weight="bold"
-                  />
-                ) : null}
-              </Fragment>
+                  </div>
+                </article>
+              </ScrollReveal>
+            ))}
+            <ScrollReveal className="md:col-span-2" delayMs={360}>
+              <article className="relative h-full min-h-[220px] overflow-hidden rounded-[1.5rem] border border-[#1f8f5f]/18 bg-[#dff7e8] p-6">
+                <div className="absolute inset-0 [background:linear-gradient(135deg,rgba(255,255,255,0.72),transparent_48%),radial-gradient(circle_at_85%_70%,rgba(52,211,133,0.24),transparent_30%)]" />
+                <div className="relative max-w-xl">
+                  <p className="font-[family-name:var(--font-mono)] text-sm text-[#1b7652]">Decision integrity</p>
+                  <h3 className="mt-6 font-[family-name:var(--font-display)] text-3xl font-semibold leading-tight">
+                    Original action hash. Approved action hash. One immutable audit trail.
+                  </h3>
+                </div>
+              </article>
+            </ScrollReveal>
+          </div>
+        </div>
+      </section>
+
+      <section className="relative overflow-hidden bg-[#edf3ed] px-5 py-20 sm:px-8 lg:px-10">
+        <div className="mx-auto grid max-w-7xl gap-10 lg:grid-cols-[0.9fr_1.1fr] lg:items-center">
+          <ScrollReveal>
+            <h2 className="font-[family-name:var(--font-display)] text-4xl font-semibold leading-tight tracking-tight sm:text-5xl">
+              The inbox becomes the control surface.
+            </h2>
+            <p className="mt-5 max-w-xl text-base leading-7 text-[#365846]">
+              Review proposed action, policy match, evidence, affected systems, and deadline before anything resumes.
+            </p>
+            <div className="mt-8 grid gap-3 sm:grid-cols-2">
+              {[
+                ["Workspace-scoped authorization", ShieldCheck],
+                ["Edit and approve flows", Code],
+                ["n8n and webhook continuations", Plugs],
+                ["LangGraph-friendly idempotency", GitBranch],
+              ].map(([label, Icon]) => (
+                <div className="rounded-2xl border border-[#123d2b]/10 bg-white/70 p-4 text-sm font-semibold shadow-[0_18px_50px_rgba(18,61,43,0.06)]" key={label as string}>
+                  <Icon className="mb-3 text-[#1b7652]" size={20} weight="bold" />
+                  {label as string}
+                </div>
+              ))}
+            </div>
+          </ScrollReveal>
+
+          <ScrollReveal delayMs={120}>
+            <div className="relative overflow-hidden rounded-[2rem] border border-[#123d2b]/10 bg-white p-2 shadow-[0_36px_110px_rgba(18,61,43,0.14)]">
+              <Image
+                alt="Decree approval inbox interface for reviewing pending workflow actions"
+                className="h-auto w-full rounded-[1.55rem]"
+                height={992}
+                sizes="(min-width: 1024px) 640px, 92vw"
+                src="/images/decree-approval-inbox.png"
+                width={1586}
+              />
+            </div>
+          </ScrollReveal>
+        </div>
+      </section>
+
+      <section className="bg-[#f6f8f3] px-5 py-20 sm:px-8 lg:px-10">
+        <div className="mx-auto max-w-7xl">
+          <ScrollReveal className="max-w-2xl">
+            <h2 className="font-[family-name:var(--font-display)] text-4xl font-semibold tracking-tight sm:text-5xl">
+              Four moves. No magic.
+            </h2>
+          </ScrollReveal>
+          <div className="mt-12 grid gap-4 md:grid-cols-4">
+            {flowSteps.map((step, index) => (
+              <ScrollReveal delayMs={index * 80} key={step.title}>
+                <article className="relative min-h-[245px] rounded-[1.5rem] border border-[#123d2b]/10 bg-white p-5 shadow-[0_24px_80px_rgba(18,61,43,0.08)]">
+                  <step.icon className="text-[#1b7652]" size={24} weight="bold" />
+                  <h3 className="mt-12 font-[family-name:var(--font-display)] text-2xl font-semibold">
+                    {step.title}
+                  </h3>
+                  <p className="mt-3 text-sm leading-6 text-[#365846]/76">{step.body}</p>
+                </article>
+              </ScrollReveal>
             ))}
           </div>
         </div>
       </section>
 
-      {/* ---------- WHERE IT PLUGS IN (full-width stacked, no split) ---------- */}
-      <section className="mx-auto max-w-7xl px-5 py-16 sm:px-8 lg:px-10">
-        <ScrollReveal className="max-w-2xl">
-          <h2 className="font-[family-name:var(--font-display)] text-3xl font-semibold sm:text-4xl">
-            Keep automations moving without handing agents a blank check.
-          </h2>
-          <p className="mt-5 text-base leading-7 text-black/65">
-            Use Decree anywhere a workflow can propose a structured
-            action: agent tools, HTTP nodes, durable graph interruptions,
-            internal services, and webhooks.
-          </p>
-        </ScrollReveal>
-
-        <ScrollReveal className="mt-7 flex flex-wrap gap-2" delayMs={80}>
-          {integrations.map((integration) => (
-            <span
-              className="flex items-center gap-2 rounded-md border border-[#1f6f78]/20 bg-white px-3 py-2 text-sm font-semibold text-[#13505a] transition hover:-translate-y-0.5 hover:border-[#1f6f78]/40"
-              key={integration.label}
-            >
-              {"logo" in integration ? (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img alt="" aria-hidden="true" className="h-4 w-4" height={16} src={integration.logo} width={16} />
-              ) : (
-                <integration.icon aria-hidden="true" size={16} weight="bold" />
-              )}
-              {integration.label}
-            </span>
-          ))}
-        </ScrollReveal>
-
-        <ScrollReveal className="mt-10" delayMs={140}>
-          <div className="rounded-lg border border-black/10 bg-[#16302b] p-6 text-white">
-            <div className="space-y-3 text-sm">
-              {gateLines.map((line, index) => (
-                <ScrollReveal delayMs={index * 130} key={line.text}>
-                  <div
-                    className={
-                      line.tone === "go"
-                        ? "gp-glow-pulse rounded-md bg-[#176a44] p-4 font-semibold text-white"
-                        : line.tone === "hold"
-                          ? "rounded-md border border-[#b74b2a]/30 bg-white/[0.06] p-4 text-white/90"
-                          : "rounded-md bg-white/[0.08] p-4 text-white/90"
-                    }
-                  >
-                    {line.text}
-                  </div>
-                </ScrollReveal>
-              ))}
-            </div>
-          </div>
-        </ScrollReveal>
-      </section>
-
-      {/* ---------- FINAL CTA ---------- */}
-      <section className="relative overflow-hidden bg-[#16302b] px-5 py-16 text-white sm:px-8 lg:px-10">
-        <div className="pointer-events-none absolute inset-0 [background:radial-gradient(50%_60%_at_10%_100%,rgba(23,106,68,0.28),transparent_60%)]" />
-        <ScrollReveal className="relative z-10 mx-auto flex max-w-7xl flex-col gap-6 md:flex-row md:items-center md:justify-between">
+      <section className="relative overflow-hidden bg-[#edf3ed] px-5 py-20 sm:px-8 lg:px-10">
+        <div className="absolute inset-0 [background:radial-gradient(circle_at_50%_0%,rgba(52,211,133,0.2),transparent_42%)]" />
+        <ScrollReveal className="relative mx-auto flex max-w-7xl flex-col items-start gap-8 rounded-[2rem] border border-white/70 bg-white/72 p-8 shadow-[0_30px_100px_rgba(18,61,43,0.12)] backdrop-blur-xl md:flex-row md:items-center md:justify-between md:p-10">
           <div>
-            <h2 className="font-[family-name:var(--font-display)] text-3xl font-semibold sm:text-4xl">
-              Put a checkpoint in front of your agents.
+            <h2 className="max-w-3xl font-[family-name:var(--font-display)] text-4xl font-semibold leading-tight tracking-tight sm:text-5xl">
+              Put policy and people inside every workflow.
             </h2>
-            <p className="mt-3 max-w-2xl text-sm leading-6 text-white/65">
-              Create a workspace, generate an API key, and route your first
-              proposed action through Decree.
+            <p className="mt-4 max-w-2xl text-base leading-7 text-[#365846]">
+              Create a workspace, generate an API key, and route your first proposed action through Decree.
             </p>
           </div>
           <Link
-            className="inline-flex min-h-12 shrink-0 items-center justify-center rounded-md bg-[#176a44] px-5 text-sm font-semibold text-white transition hover:bg-[#0f5636] active:translate-y-px"
+            className="inline-flex min-h-14 shrink-0 items-center justify-center gap-2 rounded-xl bg-[#123d2b] px-6 text-base font-semibold text-white transition hover:bg-[#19513a] active:translate-y-px"
             href="/register"
           >
             Get started
+            <ArrowRight size={18} weight="bold" />
           </Link>
         </ScrollReveal>
       </section>
 
-      {/* ---------- FOOTER ---------- */}
-      <footer className="border-t border-black/10 bg-[#f7f1e7] px-5 py-8 sm:px-8 lg:px-10">
-        <div className="mx-auto flex max-w-7xl flex-col items-center justify-between gap-3 text-sm sm:flex-row">
-          <span className="text-black/45">© {new Date().getFullYear()} Decree</span>
+      <footer className="border-t border-[#123d2b]/10 bg-[#f6f8f3] px-5 py-8 sm:px-8 lg:px-10">
+        <div className="mx-auto flex max-w-7xl flex-col items-center justify-between gap-4 text-sm text-[#365846]/70 sm:flex-row">
+          <span>© {new Date().getFullYear()} Decree</span>
           <div className="flex items-center gap-5 font-medium">
-            <Link className="text-black/60 transition hover:text-[#1f6f78]" href="/login">
+            <Link className="transition hover:text-[#123d2b]" href="/login">
               Sign in
             </Link>
-            <Link className="text-black/60 transition hover:text-[#1f6f78]" href="/register">
+            <Link className="transition hover:text-[#123d2b]" href="/register">
               Get started
             </Link>
           </div>
