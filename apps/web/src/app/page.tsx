@@ -40,7 +40,6 @@ const proofLogos = [
   { label: "n8n", logo: "https://cdn.simpleicons.org/n8n/123d2b" },
   { label: "Go", logo: "https://cdn.simpleicons.org/go/123d2b" },
   { label: "Python", logo: "https://cdn.simpleicons.org/python/123d2b" },
-  { label: "Slack", logo: "https://cdn.simpleicons.org/slack/123d2b" },
   { label: "Supabase", logo: "https://cdn.simpleicons.org/supabase/123d2b" },
 ];
 

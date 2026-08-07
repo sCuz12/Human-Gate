@@ -183,12 +183,20 @@ export function DashboardClient() {
                             session={session}
                             workspace={workspace}
                           />
-                          <Link
-                            className="inline-flex rounded-md border border-black/10 bg-white px-3 py-2 text-sm font-semibold text-black/70 transition hover:border-[#1f6f78] hover:text-[#1f6f78]"
-                            href="/policies"
-                          >
-                            Manage policies
-                          </Link>
+                          <div className="flex flex-wrap gap-3">
+                            <Link
+                              className="inline-flex rounded-md border border-black/10 bg-white px-3 py-2 text-sm font-semibold text-black/70 transition hover:border-[#1f6f78] hover:text-[#1f6f78]"
+                              href="/policies"
+                            >
+                              Manage policies
+                            </Link>
+                            <Link
+                              className="inline-flex rounded-md border border-[#1f6f78]/20 bg-[#eef8f9] px-3 py-2 text-sm font-semibold text-[#13505a] transition hover:border-[#1f6f78] hover:bg-white"
+                              href="/integrations/n8n"
+                            >
+                              n8n setup guide
+                            </Link>
+                          </div>
                         </div>
                       ) : null}
                     </div>
@@ -236,6 +244,12 @@ export function DashboardClient() {
                   href="/policies"
                 >
                   Manage policies
+                </Link>
+                <Link
+                  className="rounded-2xl border border-black/10 px-4 py-3 text-sm font-medium text-black/75 transition hover:border-[#1f6f78] hover:text-[#1f6f78]"
+                  href="/integrations/n8n"
+                >
+                  n8n setup guide
                 </Link>
                 <button
                   className="rounded-2xl bg-[#15110d] px-4 py-3 text-sm font-semibold text-white transition hover:bg-black"

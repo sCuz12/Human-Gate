@@ -9,6 +9,10 @@ primary_region = 'fra'
 [build]
   dockerfile = '../../Dockerfile.api'
 
+[env]
+  CORS_ALLOWED_ORIGINS = 'https://www.getdecree.com,https://getdecree.com'
+  PUBLIC_APP_URL = 'https://www.getdecree.com'
+
 [http_service]
   internal_port = 8080
   force_https = true
