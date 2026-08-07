@@ -42,7 +42,7 @@ func main() {
 
 	server := &http.Server{
 		Addr:              cfg.HTTPAddr,
-		Handler:           httpapi.NewRouter(logger, dbPool, supabaseAuth, []string{"http://localhost:3000", cfg.PublicAppURL}),
+		Handler:           httpapi.NewRouter(logger, dbPool, supabaseAuth, cfg.AllowedCORSOrigins()),
 		ReadHeaderTimeout: 10 * time.Second,
 	}
 

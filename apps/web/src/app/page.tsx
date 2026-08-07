@@ -107,14 +107,14 @@ export default function HomePage() {
       <section className="relative min-h-[100dvh] overflow-hidden bg-[#f6f8f3]">
         <Image
           alt="Abstract glass approval architecture with green illuminated decision panels"
-          className="absolute inset-y-0 right-0 h-full w-full object-cover opacity-28 mix-blend-multiply lg:left-[34%] lg:w-[82%]"
+          className="absolute inset-y-0 right-0 h-full w-full object-cover opacity-55 contrast-125 saturate-125 lg:left-[34%] lg:w-[82%]"
           fill
           priority
           sizes="100vw"
           src="/images/decree-glass-gate.png"
         />
-        <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(246,248,243,0.98)_0%,rgba(246,248,243,0.9)_43%,rgba(246,248,243,0.54)_100%)]" />
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_16%_76%,rgba(52,211,133,0.18),transparent_32%),radial-gradient(circle_at_86%_12%,rgba(195,213,201,0.45),transparent_28%)]" />
+        <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(246,248,243,0.98)_0%,rgba(246,248,243,0.82)_40%,rgba(246,248,243,0.18)_100%)]" />
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_16%_76%,rgba(52,211,133,0.16),transparent_32%),radial-gradient(circle_at_86%_12%,rgba(255,255,255,0.18),transparent_24%)]" />
         <div className="gp-noise" />
 
         <div className="relative mx-auto flex min-h-[100dvh] max-w-7xl flex-col px-5 py-5 sm:px-8 lg:px-10">
