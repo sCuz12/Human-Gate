@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"strings"
 
 	"github.com/joho/godotenv"
 )
@@ -18,6 +19,7 @@ type Config struct {
 	AppEncryptionKey   string
 	DecisionSigningKey string
 	PublicAppURL       string
+	CORSAllowedOrigins []string
 	WorkerQueues       string
 }
 
@@ -54,8 +56,17 @@ func loadConfigFromEnv() Config {
 		AppEncryptionKey:   os.Getenv("APP_ENCRYPTION_KEY"),
 		DecisionSigningKey: os.Getenv("DECISION_SIGNING_KEY"),
 		PublicAppURL:       os.Getenv("PUBLIC_APP_URL"),
+		CORSAllowedOrigins: splitCSV(os.Getenv("CORS_ALLOWED_ORIGINS")),
 		WorkerQueues:       getEnv("WORKER_QUEUES", "default"),
 	}
+}
+
+func (c Config) AllowedCORSOrigins() []string {
+	origins := []string{"http://localhost:3000"}
+	origins = append(origins, c.PublicAppURL)
+	origins = append(origins, c.CORSAllowedOrigins...)
+
+	return uniqueOrigins(origins)
 }
 
 func (c Config) Validate() error {
@@ -101,4 +112,36 @@ func getEnv(key string, fallback string) string {
 	}
 
 	return value
+}
+
+func splitCSV(value string) []string {
+	parts := strings.Split(value, ",")
+	values := make([]string, 0, len(parts))
+	for _, part := range parts {
+		part = strings.TrimSpace(part)
+		if part == "" {
+			continue
+		}
+		values = append(values, part)
+	}
+
+	return values
+}
+
+func uniqueOrigins(origins []string) []string {
+	seen := make(map[string]struct{}, len(origins))
+	unique := make([]string, 0, len(origins))
+	for _, origin := range origins {
+		origin = strings.TrimRight(strings.TrimSpace(origin), "/")
+		if origin == "" {
+			continue
+		}
+		if _, ok := seen[origin]; ok {
+			continue
+		}
+		seen[origin] = struct{}{}
+		unique = append(unique, origin)
+	}
+
+	return unique
 }
