@@ -209,7 +209,7 @@ const setupSteps = [
   },
   {
     title: "Resume from the signed decision",
-    body: "HumanGate sends the approval result back to n8n. Your workflow verifies it and then decides what to run next.",
+    body: "Decree sends the approval result back to n8n. Your workflow verifies it and then decides what to run next.",
   },
 ];
 
@@ -224,7 +224,7 @@ export default function N8NSetupGuidePage() {
                 n8n integration
               </p>
               <h1 className="mt-4 text-3xl font-semibold leading-tight md:text-5xl">
-                Connect n8n to HumanGate approvals.
+                Connect n8n to Decree approvals.
               </h1>
               <p className="mt-4 max-w-2xl text-sm leading-6 text-[#dbcdbb] md:text-base">
                 Pause a workflow, review the proposed action, then resume n8n
@@ -269,7 +269,7 @@ export default function N8NSetupGuidePage() {
             <div className="rounded-lg border border-[#1f6f78]/20 bg-[#eef8f9] p-6 text-[#13505a] shadow-[0_20px_55px_rgba(0,0,0,0.08)]">
               <h2 className="text-lg font-semibold">Boundary to keep clear</h2>
               <p className="mt-3 text-sm leading-6">
-                HumanGate approves or rejects the proposed action. n8n remains
+                Decree approves or rejects the proposed action. n8n remains
                 responsible for issuing refunds, updating systems, publishing
                 content, and retrying the final business operation.
               </p>
@@ -355,7 +355,7 @@ export default function N8NSetupGuidePage() {
             <section className="rounded-lg border border-black/10 bg-white p-6 shadow-[0_20px_55px_rgba(0,0,0,0.08)]">
               <h2 className="text-xl font-semibold">Resume callback</h2>
               <p className="mt-2 text-sm leading-6 text-black/65">
-                HumanGate sends a signed decision to the n8n resume webhook.
+                Decree sends a signed decision to the n8n resume webhook.
                 Verify the signature before running the final action.
               </p>
               <div className="mt-5 grid gap-5">

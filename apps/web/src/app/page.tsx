@@ -119,8 +119,15 @@ export default function HomePage() {
         <div className="relative mx-auto flex min-h-[100dvh] max-w-7xl flex-col px-5 py-5 sm:px-8 lg:px-10">
           <header className="gp-hero-in flex h-16 items-center justify-between gap-4 rounded-2xl border border-[#123d2b]/10 bg-white/58 px-4 shadow-[0_18px_70px_rgba(18,61,43,0.1)] backdrop-blur-xl">
             <Link className="flex items-center gap-3" href="/">
-              <span className="flex h-9 w-9 items-center justify-center rounded-xl border border-[#1f8f5f]/20 bg-[#dff7e8] text-[#123d2b]">
-                <ShieldCheck size={19} weight="bold" />
+              <span className="relative h-9 w-9 overflow-hidden rounded-xl border border-[#1f8f5f]/20 bg-white">
+                <Image
+                  alt="Decree"
+                  className="object-contain"
+                  fill
+                  priority
+                  sizes="36px"
+                  src="/images/decree-logo.png"
+                />
               </span>
               <span className="font-[family-name:var(--font-display)] text-xl font-semibold tracking-tight">
                 Decree
