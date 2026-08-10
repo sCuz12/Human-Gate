@@ -152,7 +152,7 @@ export default function HomePage() {
           <div className="grid flex-1 items-center gap-10 py-12 lg:grid-cols-[minmax(0,0.92fr)_minmax(360px,0.58fr)] lg:py-10">
             <div className="max-w-4xl">
               <p className="gp-hero-in max-w-fit rounded-full border border-[#1f8f5f]/20 bg-white/62 px-4 py-2 font-[family-name:var(--font-mono)] text-xs font-medium text-[#1b7652] shadow-[0_10px_30px_rgba(18,61,43,0.08)] backdrop-blur-xl">
-                Human approval for agentic workflows
+                AI proposes. Humans approve
               </p>
               <h1
                 className="gp-hero-in mt-7 max-w-4xl font-[family-name:var(--font-display)] text-5xl font-semibold leading-[0.96] tracking-tight text-[#123d2b] sm:text-6xl lg:text-7xl"
