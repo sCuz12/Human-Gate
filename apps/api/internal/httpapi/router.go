@@ -6,7 +6,6 @@ import (
 
 	"github.com/go-chi/chi/v5"
 
-	"github.com/jackc/pgx/v5/pgxpool"
 	"decree/apps/api/internal/httpapi/apikeys"
 	"decree/apps/api/internal/httpapi/approvals"
 	"decree/apps/api/internal/httpapi/health"
@@ -18,6 +17,8 @@ import (
 	"decree/internal/identity/supabaseauth"
 	identityworkspaces "decree/internal/identity/workspaces"
 	"decree/internal/policy"
+
+	"github.com/jackc/pgx/v5/pgxpool"
 )
 
 func NewRouter(logger *slog.Logger, db *pgxpool.Pool, supabaseAuth *supabaseauth.Service, allowedOrigins []string) http.Handler {
@@ -38,6 +39,7 @@ func NewRouter(logger *slog.Logger, db *pgxpool.Pool, supabaseAuth *supabaseauth
 	router.Route("/api/v1", func(r chi.Router) {
 		r.Get("/health", health.Handle())
 		r.Post("/approval-requests", approvalHandler.CreateApprovalRequest)
+		//authenticate by supabase 
 		r.Group(func(r chi.Router) {
 			r.Use(middleware.SupabaseAuth(supabaseAuth))
 			r.Get("/approval-requests", approvalHandler.ListApprovalRequests)
