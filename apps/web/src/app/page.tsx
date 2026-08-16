@@ -101,7 +101,7 @@ const flowSteps = [
 export default function HomePage() {
   return (
     <>
-      <script defer src="https://cloud.umami.is/script.js" data-website-id="1195b258-0f5f-43e1-a6b8-83bfe360c631"></script>
+
       <main
         className={`${display.variable} ${body.variable} ${mono.variable} min-h-[100dvh] overflow-hidden bg-[#f6f8f3] font-[family-name:var(--font-body)] text-[#123d2b]`}
       >
