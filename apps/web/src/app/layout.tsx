@@ -16,8 +16,7 @@ export default function RootLayout({
 
   return (
     <html lang="en">
-      <body>
-        {children}
+      <head>
         {enableAnalytics ? (
           <Script
             defer
@@ -26,6 +25,9 @@ export default function RootLayout({
             strategy="afterInteractive"
           />
         ) : null}
+      </head>
+      <body>
+        {children}
       </body>
     </html>
   );
